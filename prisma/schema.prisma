@@ -1,0 +1,172 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Enums for rigid workflows
+enum JobStatus {
+  OPEN
+  CLOSED
+  DRAFT
+}
+
+enum ApplicationStage {
+  APPLIED
+  SCREENING
+  TECHNICAL
+  HR
+  OFFER
+  HIRED
+  REJECTED
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  REMOTE
+}
+
+model User {
+  id            String          @id @default(cuid())
+  name          String?
+  email         String          @unique
+  password      String          // Hashed password
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  
+  // App-specific tables
+  jobs          Job[]
+  activityLogs  ActivityLog[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Candidate {
+  id             String           @id @default(cuid())
+  fullName       String
+  email          String           @unique
+  phone          String?
+  experience     Int              // In years
+  currentCompany String?
+  currentCTC     Float?
+  expectedCTC    Float?
+  noticePeriod   Int?             // In days
+  skills         String[]         // Array of strings supported natively by Postgres
+  resumeUrl      String?
+  notes          String?
+  applications   JobApplication[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model Job {
+  id           String   @id @default(cuid())
+  title        String
+  department   String
+  location     String   // e.g., "Remote", "New York, NY"
+  type         String   // e.g., "Full-time", "Part-time", "Contract"
+  salaryRange  String?  // e.g., "$100,000 - $130,000"
+  description  String   @db.Text
+  status       String   @default("ACTIVE") // ACTIVE, ARCHIVED, FILLED
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  applications JobApplication[]
+
+  @@index([userId])
+}
+
+model JobApplication {
+  id                String           @id @default(cuid())
+  candidateId       String
+  candidate         Candidate        @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  jobId             String
+  job               Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  stage             ApplicationStage @default(APPLIED)
+  appliedDate       DateTime         @default(now())
+  assignedRecruiter String?
+  remarks           String?
+  
+  interviews        Interview[]
+  activityLogs      ActivityLog[]
+  
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@unique([candidateId, jobId]) // Prevents applying to the same job multiple times
+}
+
+model Interview {
+  id            String         @id @default(cuid())
+  applicationId String
+  application   JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  round         String         // e.g., "Technical 1", "HR Round"
+  interviewer   String
+  scheduledAt   DateTime
+  feedback      String?
+  result        String?        // e.g., "PASSED", "FAILED", "PENDING"
+  
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model ActivityLog {
+  id            String          @id @default(cuid())
+  userId        String
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applicationId String?
+  application   JobApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  
+  action        String          // e.g., "Candidate Created", "Moved to HR"
+  details       String?
+  
+  createdAt     DateTime        @default(now())
+}
