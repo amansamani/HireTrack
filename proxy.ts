@@ -3,14 +3,22 @@ import { authConfig } from "@/lib/auth.config";
 
 const { auth } = NextAuth(authConfig);
 
+const PUBLIC_PATHS = ["/", "/login", "/register"];
+
 export const proxy = auth((req) => {
   const isLoggedIn = !!req.auth;
-  const isAuthPage = req.nextUrl.pathname.startsWith("/login") || req.nextUrl.pathname.startsWith("/register");
+  const path = req.nextUrl.pathname;
+  const isAuthPage = path.startsWith("/login") || path.startsWith("/register");
+  const isPublicPath = PUBLIC_PATHS.includes(path);
 
   if (isAuthPage) {
     if (isLoggedIn) {
       return Response.redirect(new URL("/dashboard", req.nextUrl));
     }
+    return null;
+  }
+
+  if (isPublicPath) {
     return null;
   }
 

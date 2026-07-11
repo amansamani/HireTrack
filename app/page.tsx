@@ -1,63 +1,69 @@
-import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, Users, Sparkles, Mail } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+      <nav className="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto">
+        <span className="font-semibold tracking-tight">HireTrack</span>
+        <div className="flex items-center gap-3">
+          <Link href="/login" className="text-sm text-zinc-400 hover:text-zinc-100 transition-colors">
+            Log in
+          </Link>
+          <Link
+            href="/register"
+            className="text-sm font-medium bg-zinc-100 text-zinc-900 px-4 py-2 rounded-lg hover:bg-zinc-200 transition-colors"
+          >
+            Get started
+          </Link>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      </nav>
+
+      <main className="max-w-3xl mx-auto px-6 pt-24 pb-32 text-center">
+        <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight leading-tight">
+          Hire faster, with an AI copilot reading every resume
+        </h1>
+        <p className="mt-5 text-lg text-zinc-400 max-w-xl mx-auto">
+          Post a job, share one link, and let HireTrack parse and score every applicant automatically —
+          so you spend your time interviewing, not skimming PDFs.
+        </p>
+        <div className="mt-8 flex items-center justify-center gap-3">
+          <Link
+            href="/register"
+            className="inline-flex items-center gap-2 bg-zinc-100 text-zinc-900 px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-zinc-200 transition-colors"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Start hiring free <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 border border-zinc-800 px-5 py-2.5 rounded-lg text-sm font-medium text-zinc-300 hover:border-zinc-700 transition-colors"
           >
-            Documentation
-          </a>
+            Log in
+          </Link>
+        </div>
+
+        <div className="mt-24 grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
+          <div className="border border-zinc-800 rounded-xl p-5">
+            <Sparkles className="h-5 w-5 text-purple-400 mb-3" />
+            <h3 className="font-medium text-sm mb-1.5">AI resume scoring</h3>
+            <p className="text-xs text-zinc-500 leading-relaxed">
+              Every applicant's resume is parsed and matched against the job description automatically.
+            </p>
+          </div>
+          <div className="border border-zinc-800 rounded-xl p-5">
+            <Users className="h-5 w-5 text-blue-400 mb-3" />
+            <h3 className="font-medium text-sm mb-1.5">One pipeline, zero spreadsheets</h3>
+            <p className="text-xs text-zinc-500 leading-relaxed">
+              A kanban view of every candidate, from applied to offer, with full activity history.
+            </p>
+          </div>
+          <div className="border border-zinc-800 rounded-xl p-5">
+            <Mail className="h-5 w-5 text-emerald-400 mb-3" />
+            <h3 className="font-medium text-sm mb-1.5">Candidates stay informed</h3>
+            <p className="text-xs text-zinc-500 leading-relaxed">
+              Automatic email updates on every stage change — no candidate left wondering.
+            </p>
+          </div>
         </div>
       </main>
     </div>
