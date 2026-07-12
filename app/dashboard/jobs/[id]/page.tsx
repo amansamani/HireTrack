@@ -44,17 +44,25 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
   const [activeModalApp, setActiveModalApp] = useState<{ id: string; targetStage: string } | null>(null);
   const [interviewer, setInterviewer] = useState("");
   const [scheduleTime, setScheduleTime] = useState("");
-
-  async function fetchApplicants() {
-    const res = await getJobApplicantsAction(jobId) as any;
-    if (res.applications) setApplicants(res.applications);
-    if (res.logs || res.activityLogs) setLogs(res.activityLogs || res.logs);
-    setLoading(false);
-  }
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
+
+    async function fetchApplicants() {
+      const res = await getJobApplicantsAction(jobId) as any;
+      if (cancelled) return;
+      if (res.applications) setApplicants(res.applications);
+      if (res.logs || res.activityLogs) setLogs(res.activityLogs || res.logs);
+      setLoading(false);
+    }
+
     fetchApplicants();
-  }, [jobId]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [jobId, refreshKey]);
 
   function handleStatusChange(applicationId: string, newStatus: string) {
     if (newStatus === "TECHNICAL" || newStatus === "HR") {
@@ -67,7 +75,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
       if (res?.error) toast.error(res.error);
       else {
         toast.success(res?.success);
-        fetchApplicants();
+        setRefreshKey((k) => k + 1);
       }
     });
   }
@@ -100,7 +108,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
         setActiveModalApp(null);
         setInterviewer("");
         setScheduleTime("");
-        fetchApplicants();
+        setRefreshKey((k) => k + 1);
       }
     });
   }
