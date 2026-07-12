@@ -1,13 +1,10 @@
 "use server";
 
-import { PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { signIn } from "@/lib/auth";
 import { AuthError } from "next-auth";
 import { z } from "zod";
-
-
 
 const RegisterSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -64,7 +61,7 @@ export async function loginAction(values: z.infer<typeof LoginSchema>) {
     await signIn("credentials", {
       email,
       password,
-      redirect: false, 
+      redirect: false,
     });
 
     return { success: "Logged in successfully!" };
