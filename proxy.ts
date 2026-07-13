@@ -6,7 +6,8 @@ const { auth } = NextAuth(authConfig);
 const PUBLIC_PATHS = ["/", "/login", "/register"];
 
 export const proxy = auth((req) => {
-  const isLoggedIn = !!req.auth;
+  
+  const isLoggedIn = !!req.auth?.user?.id;
   const path = req.nextUrl.pathname;
   const isAuthPage = path.startsWith("/login") || path.startsWith("/register");
   const isPublicPath = PUBLIC_PATHS.includes(path);

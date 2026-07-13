@@ -16,6 +16,10 @@ export function stageChangeEmail(candidateName: string, jobTitle: string, newSta
       subject: `An offer for ${jobTitle}!`,
       body: `Congratulations — we'd like to extend you an offer for this position. Our team will follow up with details.`,
     },
+    HIRED: {
+      subject: `Welcome aboard — ${jobTitle}!`,
+      body: `Congratulations, and welcome to the team! We're thrilled to have you join us as our new ${jobTitle}. Our team will be in touch shortly with onboarding details.`,
+    },
     REJECTED: {
       subject: `Update on your application for ${jobTitle}`,
       body: `Thank you for your interest in this role. After careful consideration, we've decided to move forward with other candidates at this time. We appreciate you applying and encourage you to apply for future openings.`,

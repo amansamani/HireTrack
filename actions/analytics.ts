@@ -16,9 +16,12 @@ export async function getRecruiterAnalyticsAction() {
     const totalInterviews = await prisma.jobApplication.count({
       where: { job: { userId }, stage: { in: ["TECHNICAL", "HR"] } }
     });
+    const totalHired = await prisma.jobApplication.count({
+      where: { job: { userId }, stage: "HIRED" }
+    });
 
     return {
-      stats: { totalJobs, totalApplications, totalOffers, totalInterviews }
+      stats: { totalJobs, totalApplications, totalOffers, totalInterviews, totalHired }
     };
   } catch (error) {
     console.error("Analytics failure:", error);

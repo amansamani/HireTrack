@@ -17,7 +17,16 @@ export async function scheduleInterviewAction(data: {
   if (!userId) return { error: "Unauthorized" };
 
   try {
-    const interview = await prisma.interview.create({
+
+    const currentApp = await prisma.jobApplication.findUnique({
+      where: { id: data.applicationId },
+      include: { candidate: true, job: true }
+    });
+
+    if (!currentApp) return { error: "Application not found." };
+    if (currentApp.job.userId !== userId) return { error: "Unauthorized" };
+
+    await prisma.interview.create({
       data: {
         applicationId: data.applicationId,
         round: data.round,
@@ -26,30 +35,23 @@ export async function scheduleInterviewAction(data: {
       },
     });
 
-    const currentApp = await prisma.jobApplication.findUnique({
-      where: { id: data.applicationId },
-      include: { candidate: true, job: true }
-    });
-
     await prisma.activityLog.create({
       data: {
         userId,
         applicationId: data.applicationId,
         action: "Interview Scheduled",
-        details: `${data.round} scheduled for ${currentApp?.candidate.fullName} with ${data.interviewer}`,
+        details: `${data.round} scheduled for ${currentApp.candidate.fullName} with ${data.interviewer}`,
       },
     });
 
-    if (currentApp) {
-      const { subject, html } = interviewScheduledEmail(
-        currentApp.candidate.fullName,
-        currentApp.job.title,
-        data.round,
-        data.interviewer,
-        new Date(data.scheduledAt)
-      );
-      await sendEmail(currentApp.candidate.email, subject, html);
-    }
+    const { subject, html } = interviewScheduledEmail(
+      currentApp.candidate.fullName,
+      currentApp.job.title,
+      data.round,
+      data.interviewer,
+      new Date(data.scheduledAt)
+    );
+    await sendEmail(currentApp.candidate.email, subject, html);
 
     revalidatePath(`/dashboard/jobs/${data.jobId}`);
     return { success: "Interview scheduled successfully!" };

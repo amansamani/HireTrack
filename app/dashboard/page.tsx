@@ -1,9 +1,8 @@
-// app/dashboard/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Briefcase, ArrowUpRight, Users2, UserCheck, CalendarCheck2 } from "lucide-react";
+import { Briefcase, ArrowUpRight, Users2, UserCheck, CalendarCheck2, Trophy } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getRecruiterAnalyticsAction } from "@/actions/analytics";
 
@@ -12,6 +11,7 @@ type StatsData = {
   totalApplications: number;
   totalOffers: number;
   totalInterviews: number;
+  totalHired: number;
 };
 
 const STAT_DEFS = [
@@ -19,6 +19,7 @@ const STAT_DEFS = [
   { key: "totalApplications", label: "Total Applications", hint: "Incoming candidates in database", icon: Users2, tone: "text-primary bg-primary/10" },
   { key: "totalInterviews", label: "Active Interviews", hint: "Candidates in Tech or HR rounds", icon: CalendarCheck2, tone: "text-warning bg-warning/10" },
   { key: "totalOffers", label: "Extended Offers", hint: "Successful offers drafted", icon: UserCheck, tone: "text-success bg-success/10" },
+  { key: "totalHired", label: "Total Hired", hint: "Candidates who accepted a role", icon: Trophy, tone: "text-chart-4 bg-chart-4/10" },
 ] as const;
 
 export default function DashboardPage() {
@@ -49,7 +50,7 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {STAT_DEFS.map((def) => {
           const Icon = def.icon;
           return (
