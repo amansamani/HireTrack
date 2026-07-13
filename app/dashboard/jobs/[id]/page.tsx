@@ -2,7 +2,7 @@
 
 import { useEffect, useState, startTransition, use, useCallback } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, User, Mail, CheckCircle2, XCircle, Clock, Briefcase, Activity, Calendar, X } from "lucide-react";
+import { ArrowLeft, User, Mail, CheckCircle2, XCircle, Clock, Briefcase, Activity, Calendar, X, Copy, ListChecks, Award } from "lucide-react";
 import Link from "next/link";
 import { getJobApplicantsAction, updateApplicationStatusAction } from "@/actions/application";
 import { scheduleInterviewAction } from "@/actions/interview";
@@ -31,9 +31,11 @@ type ActivityLog = {
 
 const PIPELINE_STAGES = [
   { key: "APPLIED", name: "Applied", color: "text-chart-2 bg-chart-2/10 border-chart-2/30" },
+  { key: "SCREENING", name: "Screening", color: "text-chart-3 bg-chart-3/10 border-chart-3/30" },
   { key: "TECHNICAL", name: "Technical Interview", color: "text-primary bg-primary/10 border-primary/30" },
   { key: "HR", name: "HR Round", color: "text-warning bg-warning/10 border-warning/30" },
   { key: "OFFER", name: "Offer", color: "text-success bg-success/10 border-success/30" },
+  { key: "HIRED", name: "Hired", color: "text-emerald-600 bg-emerald-600/10 border-emerald-600/30" },
   { key: "REJECTED", name: "Rejected", color: "text-destructive bg-destructive/10 border-destructive/30" },
 ];
 
@@ -71,6 +73,12 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
     setInterviewer("");
     setScheduleTime("");
   }, []);
+
+  function copyApplyLink() {
+    const url = `${window.location.origin}/jobs/${jobId}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Application link copied!");
+  }
 
   useEffect(() => {
     if (!activeModalApp) return;
@@ -130,30 +138,35 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="relative mx-auto max-w-7xl space-y-8">
-      <div className="flex items-center gap-4">
-        <Link
-          href="/dashboard/jobs"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:text-foreground"
-          aria-label="Back to job openings"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        </Link>
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Applicant Pipeline</h2>
-          <p className="text-sm text-muted-foreground">Track and progress candidates through evaluation phases.</p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/dashboard/jobs"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:text-foreground"
+            aria-label="Back to job openings"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          </Link>
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight">Applicant Pipeline</h2>
+            <p className="text-sm text-muted-foreground">Track and progress candidates through evaluation phases.</p>
+          </div>
         </div>
+        <Button variant="secondary" size="sm" onClick={copyApplyLink} className="shrink-0 gap-1.5 text-xs">
+          <Copy className="h-3.5 w-3.5" aria-hidden="true" /> Copy Apply Link
+        </Button>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {Array.from({ length: 5 }).map((_, i) => (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-7">
+          {Array.from({ length: 7 }).map((_, i) => (
             <div key={i} className="h-64 animate-pulse rounded-xl border border-border bg-card" />
           ))}
         </div>
       ) : (
         <>
           {/* Kanban: horizontal scroll with snap on narrower viewports, full grid on wide desktop */}
-          <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 no-scrollbar lg:mx-0 lg:grid lg:grid-cols-5 lg:overflow-visible lg:px-0">
+          <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 no-scrollbar lg:mx-0 lg:grid lg:grid-cols-7 lg:overflow-visible lg:px-0">
             {PIPELINE_STAGES.map((stage) => {
               const stageApplicants = applicants.filter((app) => app.stage === stage.key);
 
@@ -214,6 +227,17 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
                           </div>
 
                           <div className="flex items-center justify-end gap-1 border-t border-border pt-2">
+                            {stage.key !== "SCREENING" && (
+                              <button
+                                onClick={() => handleStatusChange(app.id, "SCREENING")}
+                                className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-chart-3"
+                                aria-label={`Move ${app.candidate?.fullName || "candidate"} to screening`}
+                                title="Move to Screening"
+                              >
+                                <ListChecks className="h-4 w-4" aria-hidden="true" />
+                              </button>
+                            )}
+
                             {stage.key !== "TECHNICAL" && (
                               <button
                                 onClick={() => handleStatusChange(app.id, "TECHNICAL")}
@@ -244,6 +268,17 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
                                 title="Extend Offer"
                               >
                                 <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                              </button>
+                            )}
+
+                            {stage.key !== "HIRED" && (
+                              <button
+                                onClick={() => handleStatusChange(app.id, "HIRED")}
+                                className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-emerald-600"
+                                aria-label={`Mark ${app.candidate?.fullName || "candidate"} as hired`}
+                                title="Mark as Hired"
+                              >
+                                <Award className="h-4 w-4" aria-hidden="true" />
                               </button>
                             )}
 

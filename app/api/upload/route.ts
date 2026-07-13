@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { join, extname } from "path";
 import { randomUUID } from "crypto";
+import { cloudinary } from "@/lib/cloudinary";
+import type { UploadApiResponse } from "cloudinary";
 
 const ALLOWED_TYPES: Record<string, string> = {
-  "application/pdf": ".pdf",
-  "application/msword": ".doc",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+  "application/pdf": "pdf",
+  "application/msword": "doc",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
 };
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -27,17 +27,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "File too large. Max 5MB." }, { status: 400 });
     }
 
-    const safeExt = ALLOWED_TYPES[file.type];
-    const uniqueFilename = `${randomUUID()}${safeExt}`;
-    const uploadDir = join(process.cwd(), "public", "uploads");
-
-    await mkdir(uploadDir, { recursive: true });
-
-    const path = join(uploadDir, uniqueFilename);
+    const ext = ALLOWED_TYPES[file.type];
     const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(path, buffer);
 
-    return NextResponse.json({ url: `/uploads/${uniqueFilename}` });
+    // resource_type "raw" — these are documents, not images/video, and Cloudinary
+    // needs the extension inside public_id for raw files so the URL stays parseable
+    // downstream (lib/parse-resume.ts picks the parser off the URL's file extension).
+    const result = await new Promise<UploadApiResponse>((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: "raw",
+          folder: "hiretrack/resumes",
+          public_id: `${randomUUID()}.${ext}`,
+        },
+        (error, uploadResult) => {
+          if (error || !uploadResult) return reject(error ?? new Error("Upload failed."));
+          resolve(uploadResult);
+        }
+      );
+      stream.end(buffer);
+    });
+
+    return NextResponse.json({ url: result.secure_url });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json({ error: "Upload processing failed." }, { status: 500 });

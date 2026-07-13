@@ -9,12 +9,9 @@ export async function getAllCandidatesAction() {
 
   try {
     const candidates = await prisma.candidate.findMany({
-      where: {
-        applications: { some: { job: { userId } } }
-      },
+      where: { recruiterId: userId },
       include: {
         applications: {
-          where: { job: { userId } },
           include: { job: { select: { title: true } } }
         }
       },

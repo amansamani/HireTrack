@@ -1,15 +1,15 @@
 import "pdf-parse/worker";
 import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
-import { readFile } from "fs/promises";
-import { join } from "path";
 
 export async function extractResumeText(fileUrl: string): Promise<string> {
-  // fileUrl looks like "/uploads/xxx.pdf" — resolve it to the real file on disk
-  const relativePath = fileUrl.startsWith("/") ? fileUrl.slice(1) : fileUrl;
-  const filePath = join(process.cwd(), "public", relativePath);
+  // fileUrl is now a Cloudinary secure_url (e.g. "https://res.cloudinary.com/.../resumes/xxx.pdf")
+  const response = await fetch(fileUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to download resume: ${response.status} ${response.statusText}`);
+  }
 
-  const buffer = await readFile(filePath);
+  const buffer = Buffer.from(await response.arrayBuffer());
   const ext = fileUrl.split(".").pop()?.toLowerCase();
 
   if (ext === "pdf") {

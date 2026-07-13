@@ -43,6 +43,7 @@ model User {
   
   // App-specific tables
   jobs          Job[]
+  candidates    Candidate[]
   activityLogs  ActivityLog[]
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
@@ -86,7 +87,7 @@ model VerificationToken {
 model Candidate {
   id             String           @id @default(cuid())
   fullName       String
-  email          String           @unique
+  email          String
   phone          String?
   experience     Int              // In years
   currentCompany String?
@@ -99,6 +100,15 @@ model Candidate {
   applications   JobApplication[]
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
+
+  // Candidate profiles are scoped per recruiter — the same person applying to two
+  // different companies on HireTrack must not share one record (notes/resume/CTC
+  // would otherwise leak between unrelated recruiters). Set from the job's owner
+  // at application time.
+  recruiterId    String
+  recruiter      User             @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+
+  @@unique([email, recruiterId])
 }
 
 model Job {

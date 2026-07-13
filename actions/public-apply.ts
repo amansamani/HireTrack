@@ -24,7 +24,7 @@ export async function submitApplicationAction(values: z.infer<typeof Application
   try {
     const job = await prisma.job.findUnique({ where: { id: jobId } });
 
-    if (!job) {
+    if (!job || job.status !== "OPEN") {
       return { error: "This job posting is no longer active." };
     }
 
@@ -56,6 +56,24 @@ export async function submitApplicationAction(values: z.infer<typeof Application
       }
     }
 
+    // Upsert (not connectOrCreate) so a returning candidate's name/resume stay
+    // current, and scoped to this job's recruiter so the same email applying
+    // to a different company on HireTrack doesn't share one candidate record.
+    const candidate = await prisma.candidate.upsert({
+      where: { email_recruiterId: { email: candidateEmail, recruiterId: job.userId } },
+      create: {
+        fullName: candidateName,
+        email: candidateEmail,
+        experience: 0,
+        resumeUrl: resumeUrl || null,
+        recruiterId: job.userId,
+      },
+      update: {
+        fullName: candidateName,
+        ...(resumeUrl ? { resumeUrl } : {}),
+      },
+    });
+
     await prisma.jobApplication.create({
       data: {
         stage: "APPLIED",
@@ -65,15 +83,7 @@ export async function submitApplicationAction(values: z.infer<typeof Application
           connect: { id: jobId }
         },
         candidate: {
-          connectOrCreate: {
-            where: { email: candidateEmail },
-            create: {
-              fullName: candidateName,
-              email: candidateEmail,
-              experience: 0,
-              resumeUrl: resumeUrl || null
-            }
-          }
+          connect: { id: candidate.id }
         }
       },
     });
