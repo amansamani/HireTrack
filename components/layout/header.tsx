@@ -39,22 +39,23 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
       </div>
 
       <div className="flex items-center gap-3">
-        {session?.user && (
-          <>
-            <span className="hidden rounded-md border border-border bg-card px-2.5 py-1 font-mono text-xs text-muted-foreground sm:inline-block">
-              {session.user.email}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => signOut({ callbackUrl: "/login" })}
-              className="text-muted-foreground hover:text-destructive"
-              aria-label="Sign out"
-            >
-              <LogOut className="h-4 w-4" aria-hidden="true" />
-            </Button>
-          </>
+        {session?.user?.email && (
+          <span className="hidden rounded-md border border-border bg-card px-2.5 py-1 font-mono text-xs text-muted-foreground sm:inline-block">
+            {session.user.email}
+          </span>
         )}
+        {/* Always visible: reaching this layout already means proxy.ts verified
+            a valid session, so logout shouldn't depend on the client session
+            hook having resolved yet. */}
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className="text-muted-foreground hover:text-destructive"
+          aria-label="Sign out"
+        >
+          <LogOut className="h-4 w-4" aria-hidden="true" />
+        </Button>
         <div
           className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-xs font-semibold text-foreground select-none"
           aria-hidden="true"

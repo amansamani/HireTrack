@@ -25,7 +25,6 @@ export async function registerAction(values: z.infer<typeof RegisterSchema>) {
   }
 
   const { name, email, password } = validatedFields.data;
-  const hashedPassword = await bcrypt.hash(password, 12);
 
   try {
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -33,6 +32,8 @@ export async function registerAction(values: z.infer<typeof RegisterSchema>) {
     if (existingUser) {
       return { error: "Email already in use!" };
     }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     await prisma.user.create({
       data: {
@@ -43,8 +44,19 @@ export async function registerAction(values: z.infer<typeof RegisterSchema>) {
     });
 
     return { success: "Account created successfully!" };
-  } catch (error) {
-    return { error: "Something went wrong during registration." };
+  } catch (error: any) {
+    // Log the real error server-side so it shows up in your terminal —
+    // the toast the user sees stays generic on purpose.
+    console.error("[registerAction] failed:", error);
+
+    if (error?.code === "P2002") {
+      return { error: "Email already in use!" };
+    }
+
+    return {
+      error:
+        "Something went wrong during registration. Check your server logs / DATABASE_URL.",
+    };
   }
 }
 
@@ -66,9 +78,12 @@ export async function loginAction(values: z.infer<typeof LoginSchema>) {
 
     return { success: "Logged in successfully!" };
   } catch (error) {
+    console.error("[loginAction] failed:", error);
+
     if (error instanceof AuthError) {
       switch (error.type) {
         case "CredentialsSignin":
+        case "CallbackRouteError":
           return { error: "Invalid credentials!" };
         default:
           return { error: "Something went wrong." };
