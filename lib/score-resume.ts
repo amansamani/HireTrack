@@ -41,20 +41,29 @@ Return ONLY a JSON object, no markdown, no preamble, matching exactly this shape
 }`;
 
   try {
-   const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey,
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: "application/json" },
-        }),
-      }
-    );
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
+    let response: Response;
+    try {
+      response = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey,
+          },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: "application/json" },
+          }),
+          signal: controller.signal,
+        }
+      );
+    } finally {
+      clearTimeout(timeout);
+    }
 
     if (!response.ok) {
       console.error("Gemini API error:", response.status, await response.text());
@@ -66,6 +75,7 @@ Return ONLY a JSON object, no markdown, no preamble, matching exactly this shape
     const clean = text.replace(/```json|```/g, "").trim();
     return JSON.parse(clean) as ResumeScore;
   } catch (err) {
+    
     console.error("Resume scoring failed:", err);
     return null;
   }

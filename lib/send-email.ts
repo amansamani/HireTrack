@@ -16,7 +16,7 @@ export async function sendEmail(to: string, subject: string, html: string) {
 
   try {
     await transporter.sendMail({
-      from: `"HireTrack" <${process.env.EMAIL_USER}>`,
+      from: `"HireKarlo" <${process.env.EMAIL_USER}>`,
       to,
       subject,
       html,

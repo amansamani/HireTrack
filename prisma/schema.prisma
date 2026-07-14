@@ -102,7 +102,7 @@ model Candidate {
   updatedAt      DateTime         @updatedAt
 
   // Candidate profiles are scoped per recruiter — the same person applying to two
-  // different companies on HireTrack must not share one record (notes/resume/CTC
+  // different companies on HireKarlo must not share one record (notes/resume/CTC
   // would otherwise leak between unrelated recruiters). Set from the job's owner
   // at application time.
   recruiterId    String

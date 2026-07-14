@@ -53,13 +53,9 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/*
-  HireTrack is a dark-only product (every screen already assumed a dark
-  canvas). Rather than fight that with an unused light theme, this file
-  makes the dark palette the single source of truth and layers on one
-  deliberate brand accent: lime-on-black, kept for CTAs, focus states,
-  and active nav — not painted across every surface.
-*/
+.font-script {
+  font-family: var(--font-script);
+}
 :root,
 .dark {
   --background: oklch(0.14 0.004 285.82);

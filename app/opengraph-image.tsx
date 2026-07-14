@@ -21,7 +21,7 @@ export default function Image() {
           fontWeight: 600,
         }}
       >
-        HireTrack
+        HireKarlo
         <div style={{ fontSize: 28, color: "#a1a1aa", marginTop: 20, fontWeight: 400 }}>
           AI-powered hiring pipeline
         </div>

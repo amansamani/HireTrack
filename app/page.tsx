@@ -14,10 +14,9 @@ export default function Home() {
     <div className="min-h-dvh bg-background text-foreground">
       <div className="relative">
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[640px] bg-[url(/hero-bg.webp)] bg-cover bg-top bg-no-repeat sm:h-[760px]"  
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[640px] bg-[url(/hero-bg.webp)] bg-cover bg-top bg-no-repeat sm:h-[760px]"
           aria-hidden="true"
         />
-
         {/* Nav */}
         <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-md">
           <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -25,7 +24,7 @@ export default function Home() {
               <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground">
                 H
               </span>
-              <span className="font-semibold tracking-tight">HireTrack</span>
+              <span className="font-semibold tracking-tight">HireKarlo</span>
             </Link>
             <div className="flex items-center gap-2">
               <Link
@@ -52,12 +51,13 @@ export default function Home() {
               AI resume scoring, built in
             </div>
             <h1 className="text-4xl font-semibold leading-[1.1] tracking-tight sm:text-6xl">
-              Hire faster, with an AI
-              <br />
-              copilot reading every resume
+              <span className="font-script text-5xl font-normal text-primary sm:text-9xl">Hire</span>{" "}
+                  faster, with an AI
+                <br />
+                copilot reading every resume
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
-              Post a job, share one link, and let HireTrack parse and score every
+              Post a job, share one link, and let HireKarlo parse and score every
               applicant automatically — so you spend your time interviewing, not
               skimming PDFs.
             </p>
@@ -88,7 +88,7 @@ export default function Home() {
                 <span className="h-2.5 w-2.5 rounded-full bg-warning/60" />
                 <span className="h-2.5 w-2.5 rounded-full bg-success/60" />
                 <span className="ml-3 text-xs text-muted-foreground">
-                  hiretrack.app/dashboard/jobs/senior-engineer
+                  HireKarlo.app/dashboard/jobs/senior-engineer
                 </span>
               </div>
               <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-5">
@@ -184,7 +184,7 @@ export default function Home() {
       <footer className="border-t border-border/60 px-6 py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 sm:flex-row">
           <span className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} HireTrack. Built by Aman Samani.
+            © {new Date().getFullYear()} HireKarlo. Built by Aman Samani.
           </span>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <Link href="/login" className="hover:text-foreground">Log in</Link>

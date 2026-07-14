@@ -1,4 +1,4 @@
-# Case Study — HireTrack
+# Case Study — HireKarlo
 
 ## Problem
 
@@ -8,7 +8,7 @@ and there's no single view of where each candidate actually is in the process. S
 hand doesn't scale past a handful of applicants, and candidates are usually left wondering if anyone
 ever saw their application.
 
-HireTrack solves this for a single recruiter or small hiring team: post a job, share one public link,
+HireKarlo solves this for a single recruiter or small hiring team: post a job, share one public link,
 and let the system parse and score every incoming resume automatically — so the recruiter opens their 
 dashboard to an already-ranked pipeline instead of a pile of unread PDFs.
 
@@ -62,7 +62,7 @@ only way I found the real root cause every time instead of papering over a sympt
 - Full recruiter workflow: post a job → candidate applies via a public link with no account → resume is parsed and AI-scored automatically → recruiter manages the pipeline through a kanban board → candidate receives an email on every stage change
 - Server-side authorization enforced on every data access path, closing two real cross-tenant data leaks found during review
 - Live URL - https://hire-track-beta.vercel.app/
-- GIT repo - https://github.com/amansamani/HireTrack.git
+- GIT repo - https://github.com/amansamani/HireKarlo.git
 
 
 What I'd build next:

@@ -2,7 +2,7 @@
 
 ## Data Model
 
-HireTrack's core entities and relationships:
+HireKarlo's core entities and relationships:
 User (recruiter)
 └── Job (1:many) — owns jobs via userId
 └── JobApplication (1:many)

@@ -3,39 +3,42 @@ import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import type { Metadata, Viewport } from "next";
+import {Pinyon_Script } from "next/font/google";
+
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
+const pinyonScript = Pinyon_Script({ subsets: ["latin"], weight: "400", variable: "--font-script" });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://hiretrack.amansamani.me"),
+  metadataBase: new URL("https://HireKarlo.amansamani.me"),
   title: {
-    default: "HireTrack — AI-powered hiring pipeline",
-    template: "%s | HireTrack",
+    default: "HireKarlo — AI-powered hiring pipeline",
+    template: "%s | HireKarlo",
   },
   description:
-    "Post a job, share one link, and let HireTrack parse and score every applicant's resume automatically — a lightweight ATS for recruiters who want to hire faster.",
+    "Post a job, share one link, and let HireKarlo parse and score every applicant's resume automatically — a lightweight ATS for recruiters who want to hire faster.",
   openGraph: {
-    title: "HireTrack — AI-powered hiring pipeline",
+    title: "HireKarlo — AI-powered hiring pipeline",
     description:
-      "Post a job, share one link, and let HireTrack parse and score every applicant's resume automatically.",
-    url: "https://hiretrack.amansamani.me",
-    siteName: "HireTrack",
+      "Post a job, share one link, and let HireKarlo parse and score every applicant's resume automatically.",
+    url: "https://HireKarlo.amansamani.me",
+    siteName: "HireKarlo",
     type: "website",
     images: [
       {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "HireTrack — AI-powered hiring pipeline",
+        alt: "HireKarlo — AI-powered hiring pipeline",
       },
     ],
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "HireTrack — AI-powered hiring pipeline",
+    title: "HireKarlo — AI-powered hiring pipeline",
     description:
-      "Post a job, share one link, and let HireTrack parse and score every applicant's resume automatically.",
+      "Post a job, share one link, and let HireKarlo parse and score every applicant's resume automatically.",
     images: ["/opengraph-image"],
   },
 };
@@ -48,7 +51,9 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={cn("dark font-sans", geist.variable)}>
+    <html lang="en" className={cn("dark font-sans", geist.variable,  pinyonScript.variable)}>
+
+
       <body>
         {children}
         <Toaster
@@ -63,6 +68,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </body>
+      
     </html>
+    
   );
 }

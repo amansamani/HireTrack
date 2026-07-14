@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/api/", "/dashboard/"],
     },
-    sitemap: "https://hiretrack.amansamani.me/sitemap.xml",
+    sitemap: "https://HireKarlo.amansamani.me/sitemap.xml",
   };
 }

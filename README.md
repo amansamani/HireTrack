@@ -1,4 +1,4 @@
-# HireTrack
+# HireKarlo
 
 > A lightweight applicant tracking system for recruiters — post jobs, collect applications, and let AI score every resume against the role before you even open it.
 
@@ -21,8 +21,8 @@ Next.js (App Router) · TypeScript (strict) · PostgreSQL (Prisma) · NextAuth �
 ## Quick Start
 
 \`\`\`bash
-git clone https://github.com/amansamani/HireTrack.git
-cd HireTrack
+git clone https://github.com/amansamani/HireKarlo.git
+cd HireKarlo
 cp .env.example .env   # then fill in values, see table below
 npm install
 npx prisma migrate dev

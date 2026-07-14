@@ -44,7 +44,7 @@ export default function Sidebar({
             <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
               H
             </span>
-            <span className="text-sm font-semibold tracking-tight">HireTrack</span>
+            <span className="text-sm font-semibold tracking-tight">HireKarlo</span>
           </Link>
           <button
             type="button"
@@ -82,7 +82,7 @@ export default function Sidebar({
         </nav>
 
         <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/40 p-3">
-          <p className="text-xs font-medium text-foreground">HireTrack ATS</p>
+          <p className="text-xs font-medium text-foreground">HireKarlo ATS</p>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
             AI-scored applicants, one pipeline.
           </p>

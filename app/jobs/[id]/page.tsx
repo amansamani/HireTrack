@@ -50,27 +50,28 @@ export default function PublicJobApplyPage({ params }: { params: Promise<{ id: s
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setErrors({});
+  e.preventDefault();
+  setErrors({});
 
-    const formData = new FormData(e.currentTarget);
-    const name = formData.get("candidateName") as string;
-    const email = formData.get("candidateEmail") as string;
+  const formData = new FormData(e.currentTarget);
+  const name = formData.get("candidateName") as string;
+  const email = formData.get("candidateEmail") as string;
 
-    if (!name || name.length < 2) {
-      setErrors((prev) => ({ ...prev, name: "Name must be at least 2 characters" }));
-      return;
-    }
-    if (!email || !email.includes("@")) {
-      setErrors((prev) => ({ ...prev, email: "Please provide a valid email address" }));
-      return;
-    }
-    if (!uploadedUrl) {
-      toast.error("Please upload your resume before submitting.");
-      return;
-    }
+  if (!name || name.length < 2) {
+    setErrors((prev) => ({ ...prev, name: "Name must be at least 2 characters" }));
+    return;
+  }
+  if (!email || !email.includes("@")) {
+    setErrors((prev) => ({ ...prev, email: "Please provide a valid email address" }));
+    return;
+  }
+  if (!uploadedUrl) {
+    toast.error("Please upload your resume before submitting.");
+    return;
+  }
 
-    startTransition(async () => {
+  startTransition(async () => {
+    try {
       const res = await submitApplicationAction({
         jobId,
         candidateName: name,
@@ -84,8 +85,11 @@ export default function PublicJobApplyPage({ params }: { params: Promise<{ id: s
         toast.success("Applied successfully!");
         setSubmitted(true);
       }
-    });
-  }
+    } catch (err) {
+      toast.error("Something went wrong submitting your application. Please try again.");
+    }
+  });
+}
 
   if (submitted) {
     return (

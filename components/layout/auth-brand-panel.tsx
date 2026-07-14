@@ -24,7 +24,7 @@ export function AuthBrandPanel({
         <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground">
           H
         </span>
-        <span className="font-semibold tracking-tight">HireTrack</span>
+        <span className="font-semibold tracking-tight">HireKarlo</span>
       </Link>
 
       <div className="relative z-10 max-w-sm space-y-6">

@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       const stream = cloudinary.uploader.upload_stream(
         {
           resource_type: "raw",
-          folder: "hiretrack/resumes",
+          folder: "HireKarlo/resumes",
           public_id: `${randomUUID()}.${ext}`,
         },
         (error, uploadResult) => {
