@@ -12,7 +12,7 @@ import {
 export default function Home() {
   return (
     <div className="min-h-dvh bg-background text-foreground">
-      <div className="relative">
+      <div className="relative isolate">
         <div
           className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[640px] bg-[url(/hero-bg.webp)] bg-cover bg-top bg-no-repeat sm:h-[760px]"
           aria-hidden="true"
