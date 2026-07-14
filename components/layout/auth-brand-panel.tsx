@@ -20,13 +20,21 @@ export function AuthBrandPanel({
         className="animate-pulse pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/20 blur-3xl"
         aria-hidden="true"
       />
-      <Link href="/" className="animate-in fade-in-0 relative z-10 flex items-center gap-2 duration-700">
-        <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground">
-          H
-        </span>
-        <span className="font-semibold tracking-tight">HireKarlo</span>
-      </Link>
+      <Link
+       href="/"
+      className="animate-in fade-in-0 relative z-10 flex items-center gap-2 duration-700"
+      >
+      <img
+        src="/logo.webp"
+        alt="HireKarlo Logo"
+        className="h-7 w-auto object-contain"
+      />
 
+      <span className="font-semibold tracking-tight">
+            HireKarlo
+      </span>
+      </Link>
+      
       <div className="relative z-10 max-w-sm space-y-6">
         <div className="animate-in fade-in-0 slide-in-from-left-4 space-y-2 duration-700 fill-mode-backwards">
           <h2 className="text-3xl font-semibold leading-tight tracking-tight text-foreground">{heading}</h2>
