@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MapPin, Briefcase, Users, ArrowRight, Plus } from "lucide-react";
-import { getAllJobsAction } from "@/actions/jobs-pool";
+import { toast } from "sonner";
+import { MapPin, Briefcase, Users, ArrowRight, Plus, Loader2 } from "lucide-react";
+import { getAllJobsAction, updateJobStatusAction } from "@/actions/jobs-pool";
 import { Button } from "@/components/ui/button";
 
 type GlobalJob = {
@@ -33,6 +34,7 @@ function JobCardSkeleton() {
 export default function JobsPoolPage() {
   const [jobs, setJobs] = useState<GlobalJob[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadJobs() {
@@ -42,6 +44,24 @@ export default function JobsPoolPage() {
     }
     loadJobs();
   }, []);
+
+  async function toggleStatus(job: GlobalJob) {
+    const nextStatus = job.status === "OPEN" ? "CLOSED" : "OPEN";
+    setUpdatingId(job.id);
+
+    const prevJobs = jobs;
+    setJobs((current) => current.map((j) => (j.id === job.id ? { ...j, status: nextStatus } : j)));
+
+    const res = await updateJobStatusAction(job.id, nextStatus);
+
+    if (res.error) {
+      setJobs(prevJobs);
+      toast.error(res.error);
+    } else {
+      toast.success(nextStatus === "OPEN" ? "Job reopened — accepting applicants again." : "Job closed — public link no longer accepts applicants.");
+    }
+    setUpdatingId(null);
+  }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -80,15 +100,22 @@ export default function JobsPoolPage() {
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2.5">
                   <h3 className="text-sm font-semibold text-foreground">{job.title}</h3>
-                  <span
-                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-mono font-medium ${
+                  <button
+                    type="button"
+                    onClick={() => toggleStatus(job)}
+                    disabled={updatingId === job.id}
+                    title={job.status === "OPEN" ? "Click to close this job" : "Click to reopen this job"}
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-mono font-medium transition-colors disabled:opacity-60 ${
                       job.status === "OPEN"
-                        ? "border border-success/30 bg-success/10 text-success"
-                        : "border border-border bg-muted text-muted-foreground"
+                        ? "border border-success/30 bg-success/10 text-success hover:bg-success/20"
+                        : "border border-border bg-muted text-muted-foreground hover:bg-muted/70"
                     }`}
                   >
+                    {updatingId === job.id ? (
+                      <Loader2 className="h-2.5 w-2.5 animate-spin" aria-hidden="true" />
+                    ) : null}
                     {job.status.toLowerCase()}
-                  </span>
+                  </button>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">

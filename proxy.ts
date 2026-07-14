@@ -29,5 +29,7 @@ export const proxy = auth((req) => {
 });
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|jobs).*)"],
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|jobs|.*\\.(?:png|jpg|jpeg|webp|gif|svg|ico|css|js|woff|woff2|ttf|map)$).*)",
+  ],
 };

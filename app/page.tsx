@@ -18,7 +18,7 @@ export default function Home() {
           aria-hidden="true"
         />
         {/* Nav */}
-        <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-md">
+        <header className="sticky top-0 z-30 border-b border-white/10 bg-transparent/10 backdrop-blur-xl backdrop-saturate-150 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]">
           <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
             <Link href="/" className="flex items-center gap-2">
               <img src="/logo.webp" alt="HireKarlo Logo" className="h-7 w-auto object-contain" />
@@ -44,22 +44,22 @@ export default function Home() {
         {/* Hero */}
         <main>
           <section className="mx-auto max-w-4xl px-6 pt-20 pb-16 text-center sm:pt-28">
-            <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
+            <div className="animate-in fade-in-0 slide-in-from-top-3 mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground duration-700 fill-mode-backwards">
               <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
               AI resume scoring, built in
             </div>
-            <h1 className="text-4xl font-semibold leading-[1.1] tracking-tight sm:text-6xl">
+            <h1 className="animate-in fade-in-0 slide-in-from-bottom-4 text-4xl font-semibold leading-[1.1] tracking-tight duration-700 delay-100 fill-mode-backwards sm:text-6xl">
               <span className="font-script text-5xl font-normal text-primary sm:text-9xl">Hire</span>{" "}
                   faster, with an AI
                 <br />
                 copilot reading every resume
             </h1>
-            <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
+            <p className="animate-in fade-in-0 slide-in-from-bottom-4 mx-auto mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground duration-700 delay-200 fill-mode-backwards">
               Post a job, share one link, and let HireKarlo parse and score every
               applicant automatically — so you spend your time interviewing, not
               skimming PDFs.
             </p>
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <div className="animate-in fade-in-0 slide-in-from-bottom-4 mt-8 flex flex-col items-center justify-center gap-3 duration-700 delay-300 fill-mode-backwards sm:flex-row">
               <Link
                 href="/register"
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
@@ -73,14 +73,14 @@ export default function Home() {
                 Log in
               </Link>
             </div>
-            <p className="mt-4 text-xs text-muted-foreground">
+            <p className="animate-in fade-in-0 mt-4 text-xs text-muted-foreground duration-700 delay-500 fill-mode-backwards">
               No credit card required · Free for your first job posting
             </p>
           </section>
 
           {/* Product preview mockup */}
           <section className="mx-auto max-w-5xl px-6">
-            <div className="brand-glow overflow-hidden rounded-2xl border border-border bg-card">
+            <div className="animate-in fade-in-0 slide-in-from-bottom-8 brand-glow overflow-hidden rounded-2xl border border-border bg-card duration-1000 delay-500 fill-mode-backwards">
               <div className="flex items-center gap-1.5 border-b border-border px-4 py-3">
                 <span className="h-2.5 w-2.5 rounded-full bg-destructive/60" />
                 <span className="h-2.5 w-2.5 rounded-full bg-warning/60" />

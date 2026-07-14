@@ -44,7 +44,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="grid min-h-dvh grid-cols-1 lg:grid-cols-2">
+    <div className="relative isolate grid min-h-dvh grid-cols-1 lg:grid-cols-2">
+      <div
+        className="pointer-events-none fixed inset-0 -z-10 bg-[url(/hero-bg.webp)] bg-cover bg-top bg-no-repeat"
+        aria-hidden="true"
+      />
       <AuthBrandPanel
         heading="Welcome back to your pipeline"
         subheading="Every candidate, scored and sorted, waiting where you left them."
@@ -56,7 +60,7 @@ export default function LoginPage() {
       />
 
       <div className="flex items-center justify-center p-4 sm:p-8">
-        <div className="w-full max-w-md space-y-6">
+        <div className="animate-in fade-in-0 slide-in-from-bottom-4 w-full max-w-md space-y-6 rounded-2xl border border-white/10 bg-card/60 p-6 shadow-xl backdrop-blur-xl backdrop-saturate-150 duration-700 sm:p-8">
           <div className="space-y-1.5 text-center lg:text-left">
             <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
             <p className="text-sm text-muted-foreground">Access your hiring dashboard.</p>

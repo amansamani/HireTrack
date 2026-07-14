@@ -32,7 +32,7 @@ function ResumeLink({ url }: { url: string | null }) {
       target="_blank"
       rel="noreferrer"
       className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted px-2.5 py-1.5 font-medium text-foreground transition-colors hover:bg-muted/70"
-    >
+      >
       <FileDown className="h-3 w-3" aria-hidden="true" /> Resume <ExternalLink className="h-2.5 w-2.5 opacity-50" aria-hidden="true" />
     </a>
   );
@@ -84,17 +84,21 @@ export default function CandidatesPoolPage() {
           ))}
         </div>
       ) : filteredCandidates.length === 0 ? (
-        <div className="rounded-xl border border-border bg-card/40 py-12 text-center">
+        <div className="animate-in fade-in-0 zoom-in-95 rounded-xl border border-border bg-card/40 py-12 text-center duration-300">
           <p className="italic text-muted-foreground">No candidates match your search query.</p>
         </div>
       ) : (
         <>
           {/* Mobile: card list */}
           <div className="space-y-3 sm:hidden">
-            {filteredCandidates.map((candidate) => {
+            {filteredCandidates.map((candidate, i) => {
               const latestApp = candidate.applications[0];
               return (
-                <div key={candidate.id} className="space-y-3 rounded-xl border border-border bg-card p-4">
+                <div
+                  key={candidate.id}
+                  className="animate-in fade-in-0 slide-in-from-top-2 space-y-3 rounded-xl border border-border bg-card p-4 duration-300 fill-mode-backwards"
+                  style={{ animationDelay: `${i * 40}ms` }}
+                >
                   <div>
                     <div className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
                       <User className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" /> {candidate.fullName}
@@ -136,10 +140,14 @@ export default function CandidatesPoolPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filteredCandidates.map((candidate) => {
+                {filteredCandidates.map((candidate, i) => {
                   const latestApp = candidate.applications[0];
                   return (
-                    <tr key={candidate.id} className="transition-colors hover:bg-muted/30">
+                    <tr
+                      key={candidate.id}
+                      className="animate-in fade-in-0 slide-in-from-left-1 fill-mode-backwards transition-colors duration-300 hover:bg-muted/30"
+                      style={{ animationDelay: `${i * 40}ms` }}
+                    >
                       <td className="space-y-0.5 p-4">
                         <div className="flex items-center gap-1.5 font-semibold text-foreground">
                           <User className="h-3 w-3 text-muted-foreground" aria-hidden="true" /> {candidate.fullName}
