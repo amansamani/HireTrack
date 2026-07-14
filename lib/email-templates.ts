@@ -1,3 +1,20 @@
+export function verifyEmailTemplate(name: string, verifyUrl: string) {
+  return {
+    subject: "Verify your email — HireKarlo",
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 24px; color: #18181b;">
+        <h2 style="margin-bottom: 4px;">Hi ${name},</h2>
+        <p style="color: #52525b; line-height: 1.6;">Thanks for signing up. Confirm your email address to activate your recruiter account.</p>
+        <div style="margin: 24px 0;">
+          <a href="${verifyUrl}" style="background: #18181b; color: #fff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Verify email</a>
+        </div>
+        <p style="color: #a1a1aa; font-size: 12px; line-height: 1.6;">This link expires in 24 hours. If you didn't create this account, you can ignore this email.</p>
+        <p style="color: #a1a1aa; font-size: 12px; margin-top: 32px;">— The Hiring Team</p>
+      </div>
+    `,
+  };
+}
+
 export function stageChangeEmail(candidateName: string, jobTitle: string, newStage: string) {
   const messages: Record<string, { subject: string; body: string }> = {
     SCREENING: {

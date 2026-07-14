@@ -104,7 +104,7 @@ export default function CreateJobPage() {
               id="job-type"
               value={type}
               onChange={(e) => setType(e.target.value)}
-              className="h-8 w-full appearance-none rounded-lg border border-input bg-transparent px-2.5 pr-8 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+              className="h-8 w-full appearance-none rounded-lg border border-input bg-black px-2.5 pr-8 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
             >
               <option value="Full-time">Full-time</option>
               <option value="Part-time">Part-time</option>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,6 +28,20 @@ export default function LoginPage() {
     resolver: zodResolver(LoginSchema),
     defaultValues: { email: "", password: "" },
   });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("verified")) {
+      toast.success("Email verified — you can log in now.");
+    } else if (params.get("verify_error") === "expired_token") {
+      toast.error("That verification link expired. Please register again.");
+    } else if (params.get("verify_error")) {
+      toast.error("That verification link is invalid.");
+    }
+    if (params.toString()) {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, []);
 
   async function onSubmit(values: z.infer<typeof LoginSchema>) {
     setIsLoading(true);

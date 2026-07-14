@@ -10,18 +10,13 @@ const transporter = nodemailer.createTransport({
 
 export async function sendEmail(to: string, subject: string, html: string) {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.error("Email credentials missing — skipping email send.");
-    return;
+    throw new Error("EMAIL_USER / EMAIL_PASS missing in .env");
   }
 
-  try {
-    await transporter.sendMail({
-      from: `"HireKarlo" <${process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      html,
-    });
-  } catch (err) {
-    console.error("Failed to send email:", err);
-  }
+  await transporter.sendMail({
+    from: `"HireKarlo" <${process.env.EMAIL_USER}>`,
+    to,
+    subject,
+    html,
+  });
 }
