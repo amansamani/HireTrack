@@ -10,6 +10,7 @@ export async function createJobAction(data: {
   location: string;
   type: string;
   description: string;
+  interviewRounds?: string[];
 }) {
   const userId = await requireAuth();
   if (!userId) return { error: "Unauthorized" };
@@ -17,6 +18,10 @@ export async function createJobAction(data: {
   if (!data.title || !data.department || !data.location) {
     return { error: "Please fill out all required fields." };
   }
+
+  const interviewRounds = Array.from(
+    new Set((data.interviewRounds ?? []).map((r) => r.trim()).filter(Boolean))
+  );
 
   try {
     const newJob = await prisma.job.create({
@@ -28,6 +33,7 @@ export async function createJobAction(data: {
         type: data.type,
         description: data.description,
         status: "OPEN",
+        interviewRounds,
       },
     });
 

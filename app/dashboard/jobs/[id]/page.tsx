@@ -29,6 +29,9 @@ type ActivityLog = {
   user: { name: string | null; email: string };
 };
 
+type JobInfo = { interviewRounds: string[] };
+
+
 const PIPELINE_STAGES = [
   { key: "APPLIED", name: "Applied", color: "text-chart-2 bg-chart-2/10 border-chart-2/30" },
   { key: "SCREENING", name: "Screening", color: "text-chart-3 bg-chart-3/10 border-chart-3/30" },
@@ -49,17 +52,20 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
   const [interviewer, setInterviewer] = useState("");
   const [scheduleTime, setScheduleTime] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [job, setJob] = useState<JobInfo | null>(null);
+  const [roundName, setRoundName] = useState("");
 
   useEffect(() => {
     let cancelled = false;
 
     async function fetchApplicants() {
-      const res = await getJobApplicantsAction(jobId) as any;
-      if (cancelled) return;
-      if (res.applications) setApplicants(res.applications);
-      if (res.logs || res.activityLogs) setLogs(res.activityLogs || res.logs);
-      setLoading(false);
-    }
+  const res = await getJobApplicantsAction(jobId) as any;
+  if (cancelled) return;
+  if (res.job) setJob(res.job);
+  if (res.applications) setApplicants(res.applications);
+  if (res.logs || res.activityLogs) setLogs(res.activityLogs || res.logs);
+  setLoading(false);
+}
 
     fetchApplicants();
 
@@ -72,6 +78,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
     setActiveModalApp(null);
     setInterviewer("");
     setScheduleTime("");
+    setRoundName("");
   }, []);
 
   function copyApplyLink() {
@@ -92,6 +99,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
   function handleStatusChange(applicationId: string, newStatus: string) {
     if (newStatus === "TECHNICAL" || newStatus === "HR") {
       setActiveModalApp({ id: applicationId, targetStage: newStatus });
+      setRoundName(job?.interviewRounds?.[0] || (newStatus === "TECHNICAL" ? "Technical Interview Loop" : "HR Assessment Round"));
       return;
     }
 
@@ -115,7 +123,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
     startTransition(async () => {
       const scheduleRes = await scheduleInterviewAction({
         applicationId: activeModalApp.id,
-        round: activeModalApp.targetStage === "TECHNICAL" ? "Technical Interview Loop" : "HR Assessment Round",
+        round: roundName,
         interviewer,
         scheduledAt: scheduleTime,
         jobId,
@@ -367,6 +375,27 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
             <form onSubmit={handleScheduleSubmit} className="space-y-3">
               <div className="space-y-1">
                 <label htmlFor="interviewer-name" className="text-[11px] font-medium text-muted-foreground">
+                  
+                  <div className="space-y-1">
+                    <label htmlFor="round-name" className="text-[11px] font-medium text-muted-foreground">
+                      Round Name
+                   </label>
+                  <Input id="round-name" value={roundName} onChange={(e) => setRoundName(e.target.value)} placeholder="e.g., System Design Round" required />
+                  {job?.interviewRounds && job.interviewRounds.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {job.interviewRounds.map((r) => (
+                    <button
+                         key={r}
+                      type="button"
+                      onClick={() => setRoundName(r)}
+                      className={`rounded-full border px-2.5 py-0.5 text-[11px] transition-colors ${roundName === r ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}
+                    >
+                    {r}
+                    </button>
+                  ))}
+               </div>
+                )}
+              </div>
                   Interviewer Name
                 </label>
                 <Input

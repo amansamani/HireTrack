@@ -120,6 +120,7 @@ model Job {
   salaryRange  String?  // e.g., "$100,000 - $130,000"
   description  String   @db.Text
   status       String   @default("OPEN") // OPEN, CLOSED, FILLED
+  interviewRounds String[] @default([])
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

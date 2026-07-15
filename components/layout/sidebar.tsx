@@ -41,9 +41,7 @@ export default function Sidebar({
       >
         <div className="flex items-center justify-between px-1">
           <Link href="/dashboard" className="flex items-center gap-2 py-1.5" onClick={onClose}>
-            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
-              H
-            </span>
+            <img src="/logo.webp" alt="HireKarlo Logo" className="h-7 w-auto object-contain" />
             <span className="text-sm font-semibold tracking-tight">HireKarlo</span>
           </Link>
           <button

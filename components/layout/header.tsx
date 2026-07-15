@@ -35,6 +35,7 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
         >
           <Menu className="h-4.5 w-4.5" aria-hidden="true" />
         </button>
+        <img src="/logo.webp" alt="HireKarlo Logo" className="h-6 w-auto object-contain md:hidden" />
         <h1 className="text-lg font-semibold tracking-tight sm:text-xl">{pageTitle}</h1>
       </div>
 
@@ -44,9 +45,7 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
             {session.user.email}
           </span>
         )}
-        {/* Always visible: reaching this layout already means proxy.ts verified
-            a valid session, so logout shouldn't depend on the client session
-            hook having resolved yet. */}
+
         <Button
           variant="ghost"
           size="icon-sm"
