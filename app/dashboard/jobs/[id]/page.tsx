@@ -194,7 +194,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  // 1. Initialize as empty arrays so they are NEVER undefined
+  // 1. Initialize states
   const [job, setJob] = useState<JobInfo | null>(null);
   const [applicants, setApplicants] = useState<Application[]>([]);
   const [logs, setLogs] = useState<ActivityLog[]>([]);
@@ -230,7 +230,6 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
 
   const stages = useMemo(() => buildStages(job?.interviewRounds ?? []), [job]);
 
-  // 3. THE FIX: Added `|| []` to prevent "not iterable" crash if data is momentarily undefined
   const applicantsByStage = useMemo(() => {
     const grouped: Record<string, Application[]> = {};
     for (const stage of stages) grouped[stage.key] = [];
@@ -248,11 +247,11 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
   }, []);
 
   function copyApplyLink() {
-  const url = `${window.location.origin}/jobs/${jobId}`;
-  
-  navigator.clipboard.writeText(url);
-  toast.success("Application link copied!");
-}
+    const url = `${window.location.origin}/jobs/${jobId}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Application link copied!");
+  }
+
   async function deleteJob() {
     setDeletingJob(true);
     const res = await deleteJobAction(jobId);
@@ -302,6 +301,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
     });
   }, [stages, jobId, router]);
 
+  // --- FIXED INTERVIEW SUBMISSION HANDLER ---
   function handleScheduleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!interviewer || !scheduleTime || !activeModalApp) {
@@ -310,6 +310,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
     }
 
     startTransition(async () => {
+      // 1. Trigger the interview scheduling action
       const scheduleRes = await scheduleInterviewAction({
         applicationId: activeModalApp.id,
         round: roundName,
@@ -318,22 +319,31 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
         jobId,
       });
 
-      if (scheduleRes.error) {
+      if (scheduleRes?.error) {
         toast.error(scheduleRes.error);
         return;
       }
 
-      const updateRes = await updateApplicationStatusAction(activeModalApp.id, activeModalApp.targetStage, jobId);
-      if (updateRes.error) toast.error(updateRes.error);
-      else {
-        toast.success("Interview scheduled and candidate moved!");
-        closeModal();
-        router.refresh();
+      // 2. Trigger the pipeline stage move action
+      const updateRes = await updateApplicationStatusAction(
+        activeModalApp.id, 
+        activeModalApp.targetStage, 
+        jobId
+      );
+
+      if (updateRes?.error) {
+        toast.error(updateRes.error);
+        return;
       }
+
+      // 3. Complete process gracefully on success
+      toast.success("Interview scheduled and candidate moved!");
+      closeModal();
+      router.refresh();
     });
   }
 
-  // 4. Show a simple loading state while data fetches
+  // 4. Loading State View
   if (loading) {
     return (
       <div className="relative mx-auto max-w-7xl space-y-8 p-8">
