@@ -8,6 +8,7 @@ import {
   Link2,
   ShieldCheck,
 } from "lucide-react";
+import Image from "next/image";
 
 export default function Home() {
   return (
@@ -21,7 +22,14 @@ export default function Home() {
         <header className="sticky top-0 z-30 border-b border-white/10 bg-transparent/10 backdrop-blur-xl backdrop-saturate-150 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]">
           <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
             <Link href="/" className="flex items-center gap-2">
-              <img src="/logo.webp" alt="HireKarlo Logo" className="h-7 w-auto object-contain" />
+              <Image
+                src="/logo.webp"
+                alt="HireKarlo Logo"
+                width={112} 
+                height={28} 
+                className="h-7 w-auto object-contain"
+                priority 
+              />
               <span className="font-semibold tracking-tight">HireKarlo</span>
             </Link>
             <div className="flex items-center gap-2">

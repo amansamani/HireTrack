@@ -1,5 +1,5 @@
 import Link from "next/link";
-
+import Image from "next/image";
 type Point = {
   icon: React.ComponentType<{ className?: string }>;
   text: string;
@@ -24,12 +24,14 @@ export function AuthBrandPanel({
        href="/"
       className="animate-in fade-in-0 relative z-10 flex items-center gap-2 duration-700"
       >
-      <img
+      <Image
         src="/logo.webp"
         alt="HireKarlo Logo"
+        width={112} 
+        height={28} 
         className="h-7 w-auto object-contain"
+        priority    
       />
-
       <span className="font-semibold tracking-tight">
             HireKarlo
       </span>

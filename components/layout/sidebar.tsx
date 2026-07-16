@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Briefcase, Users, CalendarClock, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-
+import Image from "next/image";
 const links = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/candidates", label: "Candidates", icon: Users },
@@ -41,7 +41,7 @@ export default function Sidebar({
       >
         <div className="flex items-center justify-between px-1">
           <Link href="/dashboard" className="flex items-center gap-2 py-1.5" onClick={onClose}>
-            <img src="/logo.webp" alt="HireKarlo Logo" className="h-7 w-auto object-contain" />
+           <Image src="/logo.webp" alt="HireKarlo Logo" width={112} height={28} className="h-7 w-auto object-contain" priority />
             <span className="text-sm font-semibold tracking-tight">HireKarlo</span>
           </Link>
           <button

@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Menu, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
+import Image from "next/image";
 const TITLE_MAP: Record<string, string> = {
   "/dashboard": "Overview",
   "/dashboard/candidates": "Candidates",
@@ -35,7 +35,7 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
         >
           <Menu className="h-4.5 w-4.5" aria-hidden="true" />
         </button>
-        <img src="/logo.webp" alt="HireKarlo Logo" className="h-6 w-auto object-contain md:hidden" />
+        <Image src="/logo.webp" alt="HireKarlo Logo" width={96} height={24} className="h-6 w-auto object-contain md:hidden" priority />
         <h1 className="text-lg font-semibold tracking-tight sm:text-xl">{pageTitle}</h1>
       </div>
 
