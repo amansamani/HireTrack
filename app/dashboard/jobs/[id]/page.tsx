@@ -194,7 +194,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  // 1. Initialize states
+  // State initialization
   const [job, setJob] = useState<JobInfo | null>(null);
   const [applicants, setApplicants] = useState<Application[]>([]);
   const [logs, setLogs] = useState<ActivityLog[]>([]);
@@ -213,20 +213,24 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
     setIsMounted(true);
   }, []);
 
-  // 2. Fetch data on mount
+  // REUSABLE DATA FETCH/REFRESH FUNCTION
+  const refreshPipelineData = useCallback(async () => {
+    const res = await getJobApplicantsAction(jobId);
+    if (res.job) setJob(res.job);
+    if (res.applications) setApplicants(res.applications);
+    if (res.activityLogs) setLogs(res.activityLogs);
+  }, [jobId]);
+
+  // Initial Fetch on mount
   useEffect(() => {
     let cancelled = false;
-    async function fetchData() {
-      const res = await getJobApplicantsAction(jobId);
-      if (cancelled) return;
-      if (res.job) setJob(res.job);
-      if (res.applications) setApplicants(res.applications);
-      if (res.activityLogs) setLogs(res.activityLogs);
-      setLoading(false);
+    async function initFetch() {
+      await refreshPipelineData();
+      if (!cancelled) setLoading(false);
     }
-    fetchData();
+    initFetch();
     return () => { cancelled = true; };
-  }, [jobId]);
+  }, [refreshPipelineData]);
 
   const stages = useMemo(() => buildStages(job?.interviewRounds ?? []), [job]);
 
@@ -270,9 +274,9 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
     if (res.error) toast.error(res.error);
     else {
       toast.success(res.success || "Scored.");
-      router.refresh();
+      await refreshPipelineData();
     }
-  }, [jobId, router]);
+  }, [jobId, refreshPipelineData]);
 
   useEffect(() => {
     if (!activeModalApp) return;
@@ -296,12 +300,12 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
       if (res?.error) toast.error(res.error);
       else {
         toast.success(res?.success);
-        router.refresh();
+        await refreshPipelineData();
       }
     });
-  }, [stages, jobId, router]);
+  }, [stages, jobId, refreshPipelineData]);
 
-  // --- FIXED INTERVIEW SUBMISSION HANDLER ---
+  // FIXED INTERVIEW SUBMISSION HANDLER
   function handleScheduleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!interviewer || !scheduleTime || !activeModalApp) {
@@ -310,7 +314,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
     }
 
     startTransition(async () => {
-      // 1. Trigger the interview scheduling action
+      // 1. Schedule interview (Backend action updates logic & internally shifts stage)
       const scheduleRes = await scheduleInterviewAction({
         applicationId: activeModalApp.id,
         round: roundName,
@@ -324,26 +328,15 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
         return;
       }
 
-      // 2. Trigger the pipeline stage move action
-      const updateRes = await updateApplicationStatusAction(
-        activeModalApp.id, 
-        activeModalApp.targetStage, 
-        jobId
-      );
-
-      if (updateRes?.error) {
-        toast.error(updateRes.error);
-        return;
-      }
-
-      // 3. Complete process gracefully on success
-      toast.success("Interview scheduled and candidate moved!");
+      // 2. Clear state modals immediately
       closeModal();
-      router.refresh();
+
+      // 3. Force refetch fresh application collection data right away
+      await refreshPipelineData();
+      toast.success("Interview scheduled successfully!");
     });
   }
 
-  // 4. Loading State View
   if (loading) {
     return (
       <div className="relative mx-auto max-w-7xl space-y-8 p-8">
