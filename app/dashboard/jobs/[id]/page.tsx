@@ -248,11 +248,11 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
   }, []);
 
   function copyApplyLink() {
-    const url = `${window.location.origin}/dashboard/jobs/${jobId}`;
-    navigator.clipboard.writeText(url);
-    toast.success("Application link copied!");
-  }
-
+  const url = `${window.location.origin}/jobs/${jobId}`;
+  
+  navigator.clipboard.writeText(url);
+  toast.success("Application link copied!");
+}
   async function deleteJob() {
     setDeletingJob(true);
     const res = await deleteJobAction(jobId);
