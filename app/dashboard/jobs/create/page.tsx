@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, startTransition } from "react";
+import { useState, useTransition, useCallback, memo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ArrowLeft, Briefcase, MapPin, Building2, AlignLeft, Loader2, Clock, ChevronDown, ListOrdered, Plus, Trash2 } from "lucide-react";
@@ -10,9 +10,46 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
+// --- MEMOIZED COMPONENTS ---
+
+// OPTIMIZATION: Extracting the round input into a memoized component prevents 
+// the entire form from re-rendering when the user types in a specific round.
+const RoundInput = memo(function RoundInput({ 
+  value, onChange, onRemove, index, canRemove 
+}: { 
+  value: string; 
+  onChange: (val: string) => void; 
+  onRemove: () => void; 
+  index: number; 
+  canRemove: boolean; 
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <Input 
+        value={value} 
+        onChange={(e) => onChange(e.target.value)} 
+        placeholder={`e.g., Round ${index + 1} — DSA / System Design / Culture Fit`} 
+        required 
+      />
+      <button
+        type="button"
+        onClick={onRemove}
+        disabled={!canRemove}
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-destructive disabled:pointer-events-none disabled:opacity-30"
+        aria-label={`Remove round ${index + 1}`}
+      >
+        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+      </button>
+    </div>
+  );
+});
+
+// --- MAIN PAGE COMPONENT ---
+
 export default function CreateJobPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  // OPTIMIZATION: Use isPending from useTransition instead of a manual loading state
+  const [isPending, startTransition] = useTransition();
 
   const [title, setTitle] = useState("");
   const [department, setDepartment] = useState("");
@@ -22,21 +59,21 @@ export default function CreateJobPage() {
   const [useCustomRounds, setUseCustomRounds] = useState(false);
   const [rounds, setRounds] = useState<string[]>([""]);
 
-  function updateRound(index: number, value: string) {
+  // OPTIMIZATION: Wrap handlers in useCallback to provide stable references to memoized children
+  const updateRound = useCallback((index: number, value: string) => {
     setRounds((prev) => prev.map((r, i) => (i === index ? value : r)));
-  }
+  }, []);
 
-  function addRound() {
+  const addRound = useCallback(() => {
     setRounds((prev) => [...prev, ""]);
-  }
+  }, []);
 
-  function removeRound(index: number) {
+  const removeRound = useCallback((index: number) => {
     setRounds((prev) => (prev.length === 1 ? prev : prev.filter((_, i) => i !== index)));
-  }
+  }, []);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
 
     startTransition(async () => {
       const res = await createJobAction({
@@ -45,10 +82,9 @@ export default function CreateJobPage() {
         location,
         type,
         description,
-        interviewRounds: useCustomRounds ? rounds : [],
+        interviewRounds: useCustomRounds ? rounds.filter(r => r.trim() !== "") : [],
       });
 
-      setLoading(false);
       if (res.error) {
         toast.error(res.error);
       } else {
@@ -123,7 +159,15 @@ export default function CreateJobPage() {
           <label htmlFor="job-description" className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
             <AlignLeft className="h-3 w-3" aria-hidden="true" /> Role Summary / Description
           </label>
-          <Textarea id="job-description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Provide information regarding expectations, skills requirement..." rows={4} className="resize-none" required />
+          <Textarea 
+            id="job-description" 
+            value={description} 
+            onChange={(e) => setDescription(e.target.value)} 
+            placeholder="Provide information regarding expectations, skills requirement..." 
+            rows={4} 
+            className="resize-none" 
+            required 
+          />
         </div>
 
         <div className="space-y-2 rounded-lg border border-border p-3">
@@ -136,14 +180,13 @@ export default function CreateJobPage() {
               id="custom-rounds-toggle"
               role="switch"
               aria-checked={useCustomRounds}
-              aria-labelledby="custom-rounds-label"
               onClick={() => setUseCustomRounds((v) => !v)}
-                className={`
+              className={`
                 relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full 
                 transition-colors duration-200 ease-in-out
                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
                 ${useCustomRounds ? "bg-primary" : "bg-input"}
-    `          }
+              `}
             >
               <span
                 className={`
@@ -162,28 +205,35 @@ export default function CreateJobPage() {
           ) : (
             <div className="space-y-2 pt-1">
               {rounds.map((round, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <Input value={round} onChange={(e) => updateRound(i, e.target.value)} placeholder={`e.g., Round ${i + 1} — DSA / System Design / Culture Fit`} required />
-                  <button
-                    type="button"
-                    onClick={() => removeRound(i)}
-                    disabled={rounds.length === 1}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-destructive disabled:pointer-events-none disabled:opacity-30"
-                    aria-label={`Remove round ${i + 1}`}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                  </button>
-                </div>
+                <RoundInput
+                  key={i}
+                  index={i}
+                  value={round}
+                  onChange={(val) => updateRound(i, val)}
+                  onRemove={() => removeRound(i)}
+                  canRemove={rounds.length > 1}
+                />
               ))}
-              <button type="button" onClick={addRound} className="flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
+              <button 
+                type="button" 
+                onClick={addRound} 
+                className="flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+              >
                 <Plus className="h-3.5 w-3.5" aria-hidden="true" /> Add another round
               </button>
             </div>
           )}
         </div>
 
-        <Button type="submit" disabled={loading} className="mt-2 w-full gap-2 text-xs font-semibold">
-          {loading ? (<><Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> Publishing Position...</>) : ("Publish Opening")}
+        <Button type="submit" disabled={isPending} className="mt-2 w-full gap-2 text-xs font-semibold">
+          {isPending ? (
+            <>
+              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> 
+              Publishing Position...
+            </>
+          ) : (
+            "Publish Opening"
+          )}
         </Button>
       </form>
     </div>

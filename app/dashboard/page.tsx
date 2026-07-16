@@ -1,6 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Briefcase, ArrowUpRight, Users2, UserCheck, CalendarCheck2, Trophy } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,18 +19,16 @@ const STAT_DEFS = [
   { key: "totalHired", label: "Total Hired", hint: "Candidates who accepted a role", icon: Trophy, tone: "text-chart-4 bg-chart-4/10" },
 ] as const;
 
-export default function DashboardPage() {
-  const [stats, setStats] = useState<StatsData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadMetrics() {
-      const res = await getRecruiterAnalyticsAction();
-      if (res.stats) setStats(res.stats);
-      setLoading(false);
-    }
-    loadMetrics();
-  }, []);
+export default async function DashboardPage() {
+  // Fetch directly on the server
+  const res = await getRecruiterAnalyticsAction();
+  const stats: StatsData = res.stats || {
+    totalJobs: 0,
+    totalApplications: 0,
+    totalOffers: 0,
+    totalInterviews: 0,
+    totalHired: 0,
+  };
 
   return (
     <div className="space-y-6">
@@ -64,13 +59,10 @@ export default function DashboardPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {loading ? (
-                  <div className="h-8 w-16 animate-pulse rounded-md bg-muted" aria-hidden="true" />
-                ) : (
-                  <div className="text-3xl font-bold tracking-tight text-foreground">
-                    {stats?.[def.key] ?? 0}
-                  </div>
-                )}
+                {/* No loading state needed! Data is already here. */}
+                <div className="text-3xl font-bold tracking-tight text-foreground">
+                  {stats[def.key]}
+                </div>
                 <p className="mt-1 text-[11px] text-muted-foreground">{def.hint}</p>
               </CardContent>
             </Card>

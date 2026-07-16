@@ -17,33 +17,39 @@ export async function scheduleInterviewAction(data: {
   if (!userId) return { error: "Unauthorized" };
 
   try {
-
+    // OPTIMIZATION: Select only necessary fields to reduce payload and memory
     const currentApp = await prisma.jobApplication.findUnique({
       where: { id: data.applicationId },
-      include: { candidate: true, job: true }
+      select: {
+        candidate: { select: { fullName: true, email: true } },
+        job: { select: { userId: true, title: true } },
+      },
     });
 
     if (!currentApp) return { error: "Application not found." };
     if (currentApp.job.userId !== userId) return { error: "Unauthorized" };
 
-    await prisma.interview.create({
-      data: {
-        applicationId: data.applicationId,
-        round: data.round,
-        interviewer: data.interviewer,
-        scheduledAt: new Date(data.scheduledAt),
-      },
-    });
+    // OPTIMIZATION: Use a transaction to ensure both records are created or neither is
+    await prisma.$transaction([
+      prisma.interview.create({
+        data: {
+          applicationId: data.applicationId,
+          round: data.round,
+          interviewer: data.interviewer,
+          scheduledAt: new Date(data.scheduledAt),
+        },
+      }),
+      prisma.activityLog.create({
+        data: {
+          userId,
+          applicationId: data.applicationId,
+          action: "Interview Scheduled",
+          details: `${data.round} scheduled for ${currentApp.candidate.fullName} with ${data.interviewer}`,
+        },
+      }),
+    ]);
 
-    await prisma.activityLog.create({
-      data: {
-        userId,
-        applicationId: data.applicationId,
-        action: "Interview Scheduled",
-        details: `${data.round} scheduled for ${currentApp.candidate.fullName} with ${data.interviewer}`,
-      },
-    });
-
+    // OPTIMIZATION: Fire-and-forget email to avoid blocking the response
     const { subject, html } = interviewScheduledEmail(
       currentApp.candidate.fullName,
       currentApp.job.title,
@@ -51,13 +57,14 @@ export async function scheduleInterviewAction(data: {
       data.interviewer,
       new Date(data.scheduledAt)
     );
-    try {
-      await sendEmail(currentApp.candidate.email, subject, html);
-    } catch (emailError) {
+    
+    sendEmail(currentApp.candidate.email, subject, html).catch((emailError) => {
       console.error("[scheduleInterviewAction] interview scheduled OK but notification email failed:", emailError);
-    }
+    });
 
     revalidatePath(`/dashboard/jobs/${data.jobId}`);
+    revalidatePath(`/dashboard/interviews`); // Ensure the interviews list updates instantly
+    
     return { success: "Interview scheduled successfully!" };
   } catch (error) {
     console.error("Scheduling error:", error);
