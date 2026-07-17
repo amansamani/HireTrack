@@ -61,7 +61,7 @@ only way I found the real root cause every time instead of papering over a sympt
 - Live, deployed application with real Postgres, real auth, and a CI pipeline that runs lint, type-check, and build on every push
 - Full recruiter workflow: post a job → candidate applies via a public link with no account → resume is parsed and AI-scored automatically → recruiter manages the pipeline through a kanban board → candidate receives an email on every stage change
 - Server-side authorization enforced on every data access path, closing two real cross-tenant data leaks found during review
-- Live URL - https://hire-track-beta.vercel.app/
+- Live URL - https://hirekarlo.amansamani.me/
 - GIT repo - https://github.com/amansamani/HireKarlo.git
 
 

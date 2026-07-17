@@ -13,5 +13,5 @@ export default async function InterviewsPoolPage() {
     );
   }
 
-  return <InterviewsPoolClient initialInterviews={res.interviews} />;
+  return <InterviewsPoolClient initialInterviews={res.interviews} initialHasMore={res.hasMore} />;
 }

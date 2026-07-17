@@ -17,6 +17,7 @@ export default async function JobsPoolPage() {
   return (
     <JobsPoolClient 
       initialJobs={res.jobs as ComponentProps<typeof JobsPoolClient>["initialJobs"]} 
+      initialHasMore={res.hasMore}
     />
   );
 }

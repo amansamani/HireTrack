@@ -13,5 +13,5 @@ export default async function CandidatesPoolPage() {
     );
   }
 
-  return <CandidatesPoolClient initialCandidates={res.candidates} />;
+  return <CandidatesPoolClient initialCandidates={res.candidates} initialHasMore={res.hasMore} />;
 }

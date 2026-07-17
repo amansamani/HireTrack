@@ -3,12 +3,14 @@
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/require-auth";
 
-export async function getAllCandidatesAction() {
+const PAGE_SIZE = 25;
+
+export async function getAllCandidatesAction(page: number = 1) {
   const userId = await requireAuth();
-  if (!userId) return { error: "Unauthorized", candidates: [] };
+  if (!userId) return { error: "Unauthorized", candidates: [], hasMore: false };
 
   try {
-    const candidates = await prisma.candidate.findMany({
+    const rows = await prisma.candidate.findMany({
       where: { recruiterId: userId },
       select: {
         id: true,
@@ -28,11 +30,14 @@ export async function getAllCandidatesAction() {
         },
       },
       orderBy: { createdAt: "desc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE + 1, // one extra row = signal that a next page exists
     });
 
-    return { candidates };
+    const hasMore = rows.length > PAGE_SIZE;
+    return { candidates: rows.slice(0, PAGE_SIZE), hasMore };
   } catch (error) {
     console.error("Failed to fetch global candidate pool:", error);
-    return { error: "Failed to load candidate list.", candidates: [] };
+    return { error: "Failed to load candidate list.", candidates: [], hasMore: false };
   }
 }

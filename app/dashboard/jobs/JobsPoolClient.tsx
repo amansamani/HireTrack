@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { MapPin, Briefcase, Users, ArrowRight, Plus, Loader2, Trash2, X } from "lucide-react";
-import { updateJobStatusAction, deleteJobAction } from "@/actions/jobs-pool";
+import { updateJobStatusAction, deleteJobAction, getAllJobsAction } from "@/actions/jobs-pool";
 import { Button } from "@/components/ui/button";
 
 // --- STRICT TYPES ---
@@ -121,13 +121,36 @@ const JobCard = memo(function JobCard({
 });
 
 // --- MAIN CLIENT COMPONENT ---
-export default function JobsPoolClient({ initialJobs }: { initialJobs: GlobalJob[] }) {
+export default function JobsPoolClient({
+  initialJobs,
+  initialHasMore,
+}: {
+  initialJobs: GlobalJob[];
+  initialHasMore: boolean;
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   
   const [jobs, setJobs] = useState<GlobalJob[]>(initialJobs);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  const loadMore = useCallback(async () => {
+    setIsLoadingMore(true);
+    const nextPage = page + 1;
+    const res = await getAllJobsAction(nextPage);
+    if (res.error) {
+      toast.error(res.error);
+    } else {
+      setJobs((current) => [...current, ...(res.jobs as GlobalJob[])]);
+      setPage(nextPage);
+      setHasMore(res.hasMore);
+    }
+    setIsLoadingMore(false);
+  }, [page]);
 
   // Memoized handlers protect against cache misses in child elements
   const toggleStatus = useCallback((job: GlobalJob) => {
@@ -230,6 +253,21 @@ export default function JobsPoolClient({ initialJobs }: { initialJobs: GlobalJob
           />
         ))}
       </div>
+
+      {hasMore && (
+        <div className="flex justify-center pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs font-semibold"
+            onClick={loadMore}
+            disabled={isLoadingMore}
+          >
+            {isLoadingMore && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />}
+            Load More
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,10 @@
 "use client";
 
-import { Calendar, Briefcase, Clock, UserCheck } from "lucide-react";
+import { useCallback, useState } from "react";
+import { Calendar, Briefcase, Clock, UserCheck, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { getAllInterviewsAction } from "@/actions/interviews-pool";
+import { toast } from "sonner";
 
 type GlobalInterview = {
   id: string;
@@ -13,10 +17,33 @@ type GlobalInterview = {
   };
 };
 
-export default function InterviewsPoolClient({ initialInterviews }: { initialInterviews: GlobalInterview[] }) {
-  // No loading state needed! Data is already here from the server.
-  
-  if (initialInterviews.length === 0) {
+export default function InterviewsPoolClient({
+  initialInterviews,
+  initialHasMore,
+}: {
+  initialInterviews: GlobalInterview[];
+  initialHasMore: boolean;
+}) {
+  const [interviews, setInterviews] = useState<GlobalInterview[]>(initialInterviews);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  const loadMore = useCallback(async () => {
+    setIsLoadingMore(true);
+    const nextPage = page + 1;
+    const res = await getAllInterviewsAction(nextPage);
+    if (res.error) {
+      toast.error(res.error);
+    } else {
+      setInterviews((current) => [...current, ...res.interviews]);
+      setPage(nextPage);
+      setHasMore(res.hasMore);
+    }
+    setIsLoadingMore(false);
+  }, [page]);
+
+  if (interviews.length === 0) {
     return (
       <div className="mx-auto max-w-5xl space-y-6">
         <div>
@@ -40,8 +67,7 @@ export default function InterviewsPoolClient({ initialInterviews }: { initialInt
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {initialInterviews.map((interview) => {
-          // Calculate dates once per item to avoid redundant processing during re-renders
+        {interviews.map((interview) => {
           const dateObj = new Date(interview.scheduledAt);
           const timeStr = dateObj.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
           const dateStr = dateObj.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
@@ -90,6 +116,21 @@ export default function InterviewsPoolClient({ initialInterviews }: { initialInt
           );
         })}
       </div>
+
+      {hasMore && (
+        <div className="flex justify-center pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs font-semibold"
+            onClick={loadMore}
+            disabled={isLoadingMore}
+          >
+            {isLoadingMore && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />}
+            Load More
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

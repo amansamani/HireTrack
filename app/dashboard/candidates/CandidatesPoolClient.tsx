@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Search, User, Mail, Briefcase, FileDown, ExternalLink } from "lucide-react";
+import { useState, useMemo, useCallback } from "react";
+import { Search, User, Mail, Briefcase, FileDown, ExternalLink, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { getAllCandidatesAction } from "@/actions/candidates-pool";
+import { toast } from "sonner";
 
 type GlobalCandidate = {
   id: string;
@@ -37,20 +40,48 @@ function ResumeLink({ url }: { url: string | null }) {
   );
 }
 
-export default function CandidatesPoolClient({ initialCandidates }: { initialCandidates: GlobalCandidate[] }) {
+export default function CandidatesPoolClient({
+  initialCandidates,
+  initialHasMore,
+}: {
+  initialCandidates: GlobalCandidate[];
+  initialHasMore: boolean;
+}) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [candidates, setCandidates] = useState<GlobalCandidate[]>(initialCandidates);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
+  const loadMore = useCallback(async () => {
+    setIsLoadingMore(true);
+    const nextPage = page + 1;
+    const res = await getAllCandidatesAction(nextPage);
+    if (res.error) {
+      toast.error(res.error);
+    } else {
+      setCandidates((current) => [...current, ...res.candidates]);
+      setPage(nextPage);
+      setHasMore(res.hasMore);
+    }
+    setIsLoadingMore(false);
+  }, [page]);
+
+  // NOTE: search only filters candidates already loaded on the client — it
+  // does not query rows on later pages until "Load More" is used. Fine for
+  // now; if this becomes confusing, move search server-side (query param +
+  // reset page to 1 on each keystroke) instead of client filtering.
   // OPTIMIZATION: Memoize the filtered list to prevent unnecessary re-calculations 
   // if the component re-renders for other reasons.
   const filteredCandidates = useMemo(() => {
-    if (!searchQuery) return initialCandidates;
+    if (!searchQuery) return candidates;
     const lowerQuery = searchQuery.toLowerCase();
-    return initialCandidates.filter(
+    return candidates.filter(
       (c) =>
         c.fullName.toLowerCase().includes(lowerQuery) ||
         c.email.toLowerCase().includes(lowerQuery)
     );
-  }, [initialCandidates, searchQuery]);
+  }, [candidates, searchQuery]);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -172,6 +203,21 @@ export default function CandidatesPoolClient({ initialCandidates }: { initialCan
             </table>
           </div>
         </>
+      )}
+
+      {!searchQuery && hasMore && (
+        <div className="flex justify-center pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs font-semibold"
+            onClick={loadMore}
+            disabled={isLoadingMore}
+          >
+            {isLoadingMore && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />}
+            Load More
+          </Button>
+        </div>
       )}
     </div>
   );

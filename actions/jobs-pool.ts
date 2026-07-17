@@ -5,12 +5,16 @@ import { requireAuth } from "@/lib/require-auth";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client"; // Import Prisma namespace for error instances
 
-export async function getAllJobsAction() {
+const PAGE_SIZE = 20;
+
+export async function getAllJobsAction(page: number = 1) {
   const userId = await requireAuth();
-  if (!userId) return { error: "Unauthorized", jobs: [] };
+  if (!userId) return { error: "Unauthorized", jobs: [], hasMore: false };
 
   try {
-    const jobs = await prisma.job.findMany({
+    // Fetch one extra row past the page size — its presence tells us
+    // whether a next page exists without a separate COUNT query.
+    const rows = await prisma.job.findMany({
       where: { userId },
       select: {
         id: true,
@@ -22,12 +26,15 @@ export async function getAllJobsAction() {
         _count: { select: { applications: true } },
       },
       orderBy: { createdAt: "desc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE + 1,
     });
 
-    return { jobs };
+    const hasMore = rows.length > PAGE_SIZE;
+    return { jobs: rows.slice(0, PAGE_SIZE), hasMore };
   } catch (error) {
     console.error("Failed to fetch jobs pool:", error);
-    return { error: "Failed to load jobs list.", jobs: [] };
+    return { error: "Failed to load jobs list.", jobs: [], hasMore: false };
   }
 }
 

@@ -2,7 +2,7 @@
 
 > A lightweight applicant tracking system for recruiters — post jobs, collect applications, and let AI score every resume against the role before you even open it.
 
-**Live demo → https://berozgaar-amansamanis-projects.vercel.app**
+Live demo → https://hirekarlo.amansamani.me/
 
 ## Features
 
