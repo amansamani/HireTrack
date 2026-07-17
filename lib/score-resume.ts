@@ -42,7 +42,7 @@ Return ONLY a JSON object, no markdown, no preamble, matching exactly this shape
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    const timeout = setTimeout(() => controller.abort(), 25000);
 
     let response: Response;
     try {
