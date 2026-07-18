@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { signIn } from "@/lib/auth";
@@ -130,12 +131,16 @@ export async function requestPasswordResetAction(values: z.infer<typeof RequestR
       const resetUrl = `${baseUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
       const { subject, html } = resetPasswordEmailTemplate(user.name ?? "there", resetUrl);
 
-      // Fire-and-forget: awaiting this here would make the response noticeably
-      // slower for emails that DO have an account (real SMTP round trip) vs
-      // ones that don't (no email step) — a timing side-channel that leaks
-      // account existence even though the response text is identical either way.
-      sendEmail(email, subject, html).catch((emailErr) => {
-        console.error("[requestPasswordResetAction] reset email failed:", emailErr);
+      // Fire-and-forget from the response's perspective (so response time
+      // doesn't leak account existence — see comment history), but wrapped
+      // in after() so Vercel keeps the function alive until this actually
+      // finishes instead of freezing/killing it the instant we return below.
+      after(async () => {
+        try {
+          await sendEmail(email, subject, html);
+        } catch (emailErr) {
+          console.error("[requestPasswordResetAction] reset email failed:", emailErr);
+        }
       });
     }
 
