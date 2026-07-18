@@ -105,3 +105,20 @@ export function interviewScheduledEmail(
     `,
   };
 }
+
+export function resetPasswordEmailTemplate(name: string, resetUrl: string) {
+  return {
+    subject: "Reset your password — HireKarlo",
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 24px; color: #18181b;">
+        <h2 style="margin-bottom: 4px;">Hi ${name},</h2>
+        <p style="color: #52525b; line-height: 1.6;">We received a request to reset your HireKarlo password. Click below to choose a new one.</p>
+        <div style="margin: 24px 0;">
+          <a href="${resetUrl}" style="background: #18181b; color: #fff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Reset password</a>
+        </div>
+        <p style="color: #a1a1aa; font-size: 12px; line-height: 1.6;">This link expires in 1 hour. If you didn't request this, you can safely ignore this email — your password won't change.</p>
+        <p style="color: #a1a1aa; font-size: 12px; margin-top: 32px;">— The Hiring Team</p>
+      </div>
+    `,
+  };
+}

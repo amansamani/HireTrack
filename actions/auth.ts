@@ -7,7 +7,7 @@ import { AuthError } from "next-auth";
 import { z } from "zod";
 import { generateVerificationToken } from "@/lib/generate-token";
 import { sendEmail } from "@/lib/send-email";
-import { verifyEmailTemplate } from "@/lib/email-templates";
+import { verifyEmailTemplate, resetPasswordEmailTemplate } from "@/lib/email-templates";
 
 const passwordRule = z
   .string()
@@ -89,6 +89,105 @@ export async function registerAction(values: z.infer<typeof RegisterSchema>) {
       error:
         "Something went wrong during registration. Check your server logs / DATABASE_URL.",
     };
+  }
+}
+
+const RequestResetSchema = z.object({
+  email: z.string().email("Invalid email address"),
+});
+
+export async function requestPasswordResetAction(values: z.infer<typeof RequestResetSchema>) {
+  const validatedFields = RequestResetSchema.safeParse(values);
+  if (!validatedFields.success) {
+    return { error: "Invalid email address." };
+  }
+
+  const { email } = validatedFields.data;
+  // Separate namespace from the register-flow verify token (identifier: email)
+  // and the public-apply OTP (identifier: "apply-otp:<email>") — same table,
+  // same convention used elsewhere in this file.
+  const identifier = `reset-password:${email}`;
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email }, select: { name: true } });
+
+    // Clear any previous reset token whether or not the account exists, so
+    // the response and timing look identical either way — don't let this
+    // endpoint be used to check which emails have accounts.
+    await prisma.verificationToken.deleteMany({ where: { identifier } });
+
+    if (user) {
+      const token = generateVerificationToken();
+      await prisma.verificationToken.create({
+        data: {
+          identifier,
+          token,
+          expires: new Date(Date.now() + 60 * 60 * 1000), // 1h — shorter-lived than email verify since this grants account access
+        },
+      });
+
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const resetUrl = `${baseUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
+      const { subject, html } = resetPasswordEmailTemplate(user.name ?? "there", resetUrl);
+
+      // Fire-and-forget: awaiting this here would make the response noticeably
+      // slower for emails that DO have an account (real SMTP round trip) vs
+      // ones that don't (no email step) — a timing side-channel that leaks
+      // account existence even though the response text is identical either way.
+      sendEmail(email, subject, html).catch((emailErr) => {
+        console.error("[requestPasswordResetAction] reset email failed:", emailErr);
+      });
+    }
+
+    return { success: "If an account exists for that email, a reset link is on its way." };
+  } catch (error) {
+    console.error("[requestPasswordResetAction] failed:", error);
+    return { error: "Something went wrong. Please try again." };
+  }
+}
+
+const ResetPasswordSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  token: z.string().min(1, "Missing reset token."),
+  password: passwordRule,
+});
+
+export async function resetPasswordAction(values: z.infer<typeof ResetPasswordSchema>) {
+  const validatedFields = ResetPasswordSchema.safeParse(values);
+  if (!validatedFields.success) {
+    return { error: validatedFields.error.issues[0]?.message ?? "Invalid input." };
+  }
+
+  const { email, token, password } = validatedFields.data;
+  const identifier = `reset-password:${email}`;
+
+  try {
+    const record = await prisma.verificationToken.findUnique({
+      where: { identifier_token: { identifier, token } },
+    });
+
+    if (!record || record.expires < new Date()) {
+      if (record) {
+        await prisma.verificationToken.delete({ where: { identifier_token: { identifier, token } } });
+      }
+      return { error: "This reset link is invalid or has expired. Request a new one." };
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    await prisma.user.update({
+      where: { email },
+      data: { password: hashedPassword },
+    });
+
+    // Single-use — burn the token whether the update succeeded or we'd have
+    // already returned above.
+    await prisma.verificationToken.delete({ where: { identifier_token: { identifier, token } } });
+
+    return { success: "Password updated — you can log in now." };
+  } catch (error) {
+    console.error("[resetPasswordAction] failed:", error);
+    return { error: "Something went wrong. Please try again." };
   }
 }
 
