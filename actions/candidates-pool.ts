@@ -1,20 +1,20 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/require-auth";
+import { requireOrg } from "@/lib/require-auth";
 
 const PAGE_SIZE = 25;
 
 export async function getAllCandidatesAction(page: number = 1, search: string = "") {
-  const userId = await requireAuth();
-  if (!userId) return { error: "Unauthorized", candidates: [], hasMore: false };
+  const ctx = await requireOrg();
+  if (!ctx) return { error: "Unauthorized", candidates: [], hasMore: false };
 
   const trimmed = search.trim();
 
   try {
     const rows = await prisma.candidate.findMany({
       where: {
-        recruiterId: userId,
+        organizationId: ctx.organizationId,
         ...(trimmed
           ? {
               OR: [
@@ -33,10 +33,7 @@ export async function getAllCandidatesAction(page: number = 1, search: string = 
         applications: {
           take: 1,
           orderBy: { createdAt: "desc" },
-          select: {
-            stage: true,
-            job: { select: { title: true } },
-          },
+          select: { stage: true, job: { select: { title: true } } },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -52,15 +49,13 @@ export async function getAllCandidatesAction(page: number = 1, search: string = 
   }
 }
 
-// CSV export — pulls the recruiter's full candidate list (no pagination cap,
-// this is an explicit one-shot export) and returns a ready-to-download string.
 export async function exportCandidatesCsvAction() {
-  const userId = await requireAuth();
-  if (!userId) return { error: "Unauthorized" };
+  const ctx = await requireOrg();
+  if (!ctx) return { error: "Unauthorized" };
 
   try {
     const rows = await prisma.candidate.findMany({
-      where: { recruiterId: userId },
+      where: { organizationId: ctx.organizationId },
       select: {
         fullName: true,
         email: true,
@@ -71,29 +66,20 @@ export async function exportCandidatesCsvAction() {
         expectedCTC: true,
         resumeUrl: true,
         createdAt: true,
-        applications: {
-          orderBy: { createdAt: "desc" },
-          take: 1,
-          select: { stage: true, job: { select: { title: true } } },
-        },
+        applications: { orderBy: { createdAt: "desc" }, take: 1, select: { stage: true, job: { select: { title: true } } } },
       },
       orderBy: { createdAt: "desc" },
     });
 
     const escape = (val: string) => `"${val.replace(/"/g, '""')}"`;
-    const header = [
-      "Name", "Email", "Phone", "Experience (yrs)", "Current Company",
-      "Current CTC", "Expected CTC", "Latest Job", "Stage", "Resume URL", "Applied Date",
-    ];
+    const header = ["Name", "Email", "Phone", "Experience (yrs)", "Current Company", "Current CTC", "Expected CTC", "Latest Job", "Stage", "Resume URL", "Applied Date"];
 
     const lines = rows.map((c) => {
       const latest = c.applications[0];
       return [
-        c.fullName, c.email, c.phone ?? "", String(c.experience),
-        c.currentCompany ?? "", c.currentCTC != null ? String(c.currentCTC) : "",
-        c.expectedCTC != null ? String(c.expectedCTC) : "",
-        latest?.job.title ?? "", latest?.stage ?? "", c.resumeUrl ?? "",
-        c.createdAt.toISOString().split("T")[0],
+        c.fullName, c.email, c.phone ?? "", String(c.experience), c.currentCompany ?? "",
+        c.currentCTC != null ? String(c.currentCTC) : "", c.expectedCTC != null ? String(c.expectedCTC) : "",
+        latest?.job.title ?? "", latest?.stage ?? "", c.resumeUrl ?? "", c.createdAt.toISOString().split("T")[0],
       ].map((v) => escape(String(v))).join(",");
     });
 

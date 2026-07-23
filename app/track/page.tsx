@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-type AppStatus = { stage: string; appliedDate: string; job: { title: string; department: string } };
+// appliedDate comes back as a real Date instance (server actions preserve
+// Date objects through the RSC payload, they don't get stringified) — typed
+// as Date | string here since it's rendered through `new Date(...)` either way.
+type AppStatus = { stage: string; appliedDate: Date | string; job: { title: string; department: string } };
 
 const STAGE_LABELS: Record<string, string> = {
   APPLIED: "Application received", SCREENING: "In screening", TECHNICAL: "Technical round",
@@ -38,7 +41,7 @@ export default function TrackApplicationPage() {
     const res = await getApplicationStatusAction(email, otp.trim());
     setLoading(false);
     if (res.error) toast.error(res.error);
-    else setApplications(res.applications ?? []);
+    else setApplications((res.applications ?? []) as AppStatus[]);
   }
 
   return (

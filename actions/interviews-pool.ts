@@ -1,17 +1,17 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/require-auth";
+import { requireOrg } from "@/lib/require-auth";
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 20;
 
 export async function getAllInterviewsAction(page: number = 1) {
-  const userId = await requireAuth();
-  if (!userId) return { error: "Unauthorized", interviews: [], hasMore: false };
+  const ctx = await requireOrg();
+  if (!ctx) return { error: "Unauthorized", interviews: [], hasMore: false };
 
   try {
     const rows = await prisma.interview.findMany({
-      where: { application: { job: { userId } } },
+      where: { application: { job: { organizationId: ctx.organizationId } } },
       select: {
         id: true,
         round: true,
@@ -36,6 +36,6 @@ export async function getAllInterviewsAction(page: number = 1) {
     return { interviews: rows.slice(0, PAGE_SIZE), hasMore };
   } catch (error) {
     console.error("Failed to fetch interviews pool:", error);
-    return { error: "Failed to load interviews list.", interviews: [], hasMore: false };
+    return { error: "Failed to load interviews.", interviews: [], hasMore: false };
   }
 }

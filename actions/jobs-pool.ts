@@ -1,9 +1,10 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/require-auth";
+import { requireOrg } from "@/lib/require-auth";
+import { canEditPipeline } from "@/lib/roles";
 import { revalidatePath } from "next/cache";
-import { Prisma } from "@prisma/client"; // Import Prisma namespace for error instances
+import { Prisma } from "@prisma/client";
 
 const PAGE_SIZE = 20;
 
@@ -12,14 +13,14 @@ export async function getAllJobsAction(
   search: string = "",
   statusFilter?: "OPEN" | "CLOSED" | "FILLED"
 ) {
-  const userId = await requireAuth();
-  if (!userId) return { error: "Unauthorized", jobs: [], hasMore: false };
+  const ctx = await requireOrg();
+  if (!ctx) return { error: "Unauthorized", jobs: [], hasMore: false };
 
   const trimmed = search.trim();
 
   try {
     const where: Prisma.JobWhereInput = {
-      userId,
+      organizationId: ctx.organizationId,
       ...(statusFilter ? { status: statusFilter } : {}),
       ...(trimmed
         ? {
@@ -31,7 +32,7 @@ export async function getAllJobsAction(
           }
         : {}),
     };
-    
+
     const rows = await prisma.job.findMany({
       where,
       select: {
@@ -57,48 +58,36 @@ export async function getAllJobsAction(
 }
 
 export async function updateJobStatusAction(jobId: string, status: "OPEN" | "CLOSED" | "FILLED") {
-  const userId = await requireAuth();
-  if (!userId) return { error: "Unauthorized" };
+  const ctx = await requireOrg();
+  if (!ctx) return { error: "Unauthorized" };
+  if (!canEditPipeline(ctx.role)) return { error: "Interviewers can't change job status." };
 
   try {
     await prisma.job.update({
-      where: { id: jobId, userId },
+      where: { id: jobId, organizationId: ctx.organizationId },
       data: { status },
     });
-
     revalidatePath("/dashboard/jobs");
-    revalidatePath(`/dashboard/jobs/${jobId}`);
-    return { success: true };
+    return { success: "Status updated." };
   } catch (error) {
-    // Catch the specific Prisma error when the record doesn't exist or userId doesn't match
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
-      return { error: "Job not found or unauthorized" };
-    }
-    
-    console.error("Failed to update job status:", error);
-    return { error: "Failed to update job status" };
+    console.error("[updateJobStatusAction] failed — record doesn't exist or organizationId doesn't match:", error);
+    return { error: "Failed to update job status." };
   }
 }
 
 export async function deleteJobAction(jobId: string) {
-  const userId = await requireAuth();
-  if (!userId) return { error: "Unauthorized" };
+  const ctx = await requireOrg();
+  if (!ctx) return { error: "Unauthorized" };
+  if (!canEditPipeline(ctx.role)) return { error: "Interviewers can't delete jobs." };
 
   try {
-    const deletedJob = await prisma.job.delete({
-      where: { id: jobId, userId },
-      select: { title: true }, 
+    await prisma.job.delete({
+      where: { id: jobId, organizationId: ctx.organizationId },
     });
-
     revalidatePath("/dashboard/jobs");
-    return { success: `"${deletedJob.title}" deleted.` };
+    return { success: "Job deleted." };
   } catch (error) {
-    // Catch the specific Prisma error when the record doesn't exist or userId doesn't match
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
-      return { error: "Job not found or unauthorized" };
-    }
-
-    console.error("Failed to delete job:", error);
+    console.error("[deleteJobAction] failed — record doesn't exist or organizationId doesn't match:", error);
     return { error: "Failed to delete job." };
   }
 }

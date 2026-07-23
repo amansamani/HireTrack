@@ -2,11 +2,10 @@
 
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/require-auth";
+import { requireOrg } from "@/lib/require-auth";
+import { canEditPipeline } from "@/lib/roles";
 import { revalidatePath } from "next/cache";
 
-// OPTIMIZATION: Strict Zod schema prevents malformed data from ever reaching the database.
-// It also provides automatic, clean error messages if validation fails.
 const CreateJobSchema = z.object({
   title: z.string().trim().min(1, "Job title is required").max(100),
   department: z.string().trim().min(1, "Department is required").max(50),
@@ -16,24 +15,23 @@ const CreateJobSchema = z.object({
   interviewRounds: z.array(z.string().trim()).optional(),
 });
 
-// Best practice: Accept `unknown` for server actions to prevent type spoofing from the client
 export async function createJobAction(rawData: unknown) {
-  const userId = await requireAuth();
-  if (!userId) {
+  const ctx = await requireOrg();
+  if (!ctx) {
     return { error: "Unauthorized" };
   }
+  if (!canEditPipeline(ctx.role)) {
+    return { error: "Interviewers can't create job postings." };
+  }
 
-  // 1. Validate the incoming data
   const parsed = CreateJobSchema.safeParse(rawData);
   if (!parsed.success) {
-    // Extract the first error message to show the user
     const firstError = parsed.error.issues[0]?.message || "Invalid data provided.";
     return { error: firstError };
   }
 
   const data = parsed.data;
 
-  // 2. Clean and deduplicate interview rounds (Your excellent logic, preserved!)
   const interviewRounds = Array.from(
   new Set((data.interviewRounds ?? []).map((r) => r).filter(Boolean))
 );
@@ -41,7 +39,8 @@ export async function createJobAction(rawData: unknown) {
   try {
     const newJob = await prisma.job.create({
       data: {
-        userId,
+        userId: ctx.userId,
+        organizationId: ctx.organizationId,
         title: data.title,
         department: data.department,
         location: data.location,
@@ -52,8 +51,6 @@ export async function createJobAction(rawData: unknown) {
       },
     });
 
-    // OPTIMIZATION: Revalidate BOTH the jobs list AND the main dashboard.
-    // This ensures the "Total Postings" stat card updates instantly without a page refresh.
     revalidatePath("/dashboard/jobs");
     revalidatePath("/dashboard");
     

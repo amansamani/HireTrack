@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Briefcase, Users, CalendarClock, X } from "lucide-react";
+import { LayoutDashboard, Briefcase, Users, CalendarClock, Users2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 const links = [
@@ -10,6 +10,7 @@ const links = [
   { href: "/dashboard/candidates", label: "Candidates", icon: Users },
   { href: "/dashboard/jobs", label: "Jobs", icon: Briefcase },
   { href: "/dashboard/interviews", label: "Interviews", icon: CalendarClock },
+  { href: "/dashboard/team", label: "Team", icon: Users2 },
 ];
 
 export default function Sidebar({
@@ -23,7 +24,6 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Mobile backdrop */}
       {mobileOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm md:hidden"

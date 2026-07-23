@@ -3,18 +3,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// requireAuth() runs on every server action call. The `user still exists`
-// check below exists only to catch the rare stale/mismatched session (see
-// the bug this was originally added for) — it's not an authorization check,
-// the signed JWT already proves identity. Re-querying Postgres for that on
-// every single click is a wasted round trip almost every time, so cache a
-// verified userId for TTL_MS and skip the query on repeat calls.
-//
-// This is a best-effort, per-serverless-instance cache (a plain module-level
-// Map), not a distributed cache — a cold start or a request landing on a
-// different instance just re-verifies once. Worst case, a deleted user's
-// session takes up to TTL_MS to be caught instead of instantly, which is the
-// same class of staleness a JWT already tolerates between refreshes.
 const verifiedUsers = new Map<string, number>();
 const TTL_MS = 60_000;
 
@@ -55,4 +43,22 @@ export async function requireAuth() {
   }
 
   return userId;
+}
+
+export async function requireOrg(): Promise<{ userId: string; organizationId: string; role: string } | null> {
+  const userId = await requireAuth();
+  if (!userId) return null;
+
+  const membership = await prisma.membership.findFirst({
+    where: { userId },
+    orderBy: { createdAt: "asc" },
+    select: { organizationId: true, role: true },
+  });
+
+  if (!membership) {
+    console.error(`[requireOrg] user ${userId} has no Organization membership — should be impossible after signup backfill.`);
+    return null;
+  }
+
+  return { userId, organizationId: membership.organizationId, role: membership.role };
 }

@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/require-auth";
+import { requireOrg } from "@/lib/require-auth";
 import { revalidatePath } from "next/cache";
 import { sendEmail } from "@/lib/send-email";
 import { interviewScheduledEmail } from "@/lib/email-templates";
@@ -15,8 +15,8 @@ export async function scheduleInterviewAction(data: {
   jobId: string;
   durationMinutes?: number;
 }) {
-  const userId = await requireAuth();
-  if (!userId) return { error: "Unauthorized" };
+  const ctx = await requireOrg();
+  if (!ctx) return { error: "Unauthorized" };
 
   const duration = data.durationMinutes ?? 60;
   const start = new Date(data.scheduledAt);
@@ -27,23 +27,19 @@ export async function scheduleInterviewAction(data: {
       where: { id: data.applicationId },
       select: {
         candidate: { select: { fullName: true, email: true } },
-        job: { select: { userId: true, title: true } },
+        job: { select: { organizationId: true, title: true } },
       },
     });
 
     if (!currentApp) return { error: "Application not found." };
-    if (currentApp.job.userId !== userId) return { error: "Unauthorized" };
+    if (currentApp.job.organizationId !== ctx.organizationId) return { error: "Unauthorized" };
 
-    // Double-booking guard — interviewer is free text (no interviewer accounts
-    // in this schema yet), so this is a soft name-match within this recruiter's
-    // own jobs, scanning a generous +/-4h window and checking real overlap in JS
-    // since each interview can have its own duration.
     const scanStart = new Date(start.getTime() - 4 * 60 * 60_000);
     const scanEnd = new Date(end.getTime() + 4 * 60 * 60_000);
     const nearby = await prisma.interview.findMany({
       where: {
         interviewer: data.interviewer,
-        application: { job: { userId } },
+        application: { job: { organizationId: ctx.organizationId } },
         scheduledAt: { gte: scanStart, lte: scanEnd },
       },
       select: { scheduledAt: true, durationMinutes: true, application: { select: { candidate: { select: { fullName: true } } } } },
@@ -59,17 +55,11 @@ export async function scheduleInterviewAction(data: {
 
     await prisma.$transaction([
       prisma.interview.create({
-        data: {
-          applicationId: data.applicationId,
-          round: data.round,
-          interviewer: data.interviewer,
-          scheduledAt: start,
-          durationMinutes: duration,
-        },
+        data: { applicationId: data.applicationId, round: data.round, interviewer: data.interviewer, scheduledAt: start, durationMinutes: duration },
       }),
       prisma.activityLog.create({
         data: {
-          userId,
+          userId: ctx.userId,
           applicationId: data.applicationId,
           action: "Interview Scheduled",
           details: `${data.round} scheduled for ${currentApp.candidate.fullName} with ${data.interviewer}`,
@@ -77,14 +67,7 @@ export async function scheduleInterviewAction(data: {
       }),
     ]);
 
-    const { subject, html } = interviewScheduledEmail(
-      currentApp.candidate.fullName,
-      currentApp.job.title,
-      data.round,
-      data.interviewer,
-      start
-    );
-
+    const { subject, html } = interviewScheduledEmail(currentApp.candidate.fullName, currentApp.job.title, data.round, data.interviewer, start);
     const ics = generateInterviewICS({
       uid: `${data.applicationId}-${start.getTime()}`,
       title: `${data.round} — ${currentApp.job.title}`,
@@ -93,7 +76,6 @@ export async function scheduleInterviewAction(data: {
       durationMinutes: duration,
     });
 
-    // Fire-and-forget — notification failures shouldn't undo the scheduled interview.
     sendEmail(currentApp.candidate.email, subject, html, [
       { filename: "interview.ics", content: ics, contentType: "text/calendar; method=PUBLISH" },
     ]).catch((emailError) => {
@@ -113,26 +95,16 @@ export async function scheduleInterviewAction(data: {
 export async function submitInterviewFeedbackAction(data: {
   interviewId: string;
   result: "PASSED" | "FAILED" | "PENDING";
-  rating: number; // 1-5
+  rating: number;
   feedback: string;
 }) {
-  const userId = await requireAuth();
-  if (!userId) return { error: "Unauthorized" };
-
-  if (data.rating < 1 || data.rating > 5) {
-    return { error: "Rating must be between 1 and 5." };
-  }
+  const ctx = await requireOrg();
+  if (!ctx) return { error: "Unauthorized" };
+  if (data.rating < 1 || data.rating > 5) return { error: "Rating must be between 1 and 5." };
 
   try {
-    const interview = await prisma.interview.findUnique({
-      where: { id: data.interviewId },
-      select: { application: { select: { job: { select: { userId: true } } }, applicationId: true } as never, applicationId: true },
-    });
-
-    // Ownership check — same pattern as scheduleInterviewAction: walk
-    // interview -> application -> job.userId, never trust a client-passed id alone.
     const owned = await prisma.interview.findFirst({
-      where: { id: data.interviewId, application: { job: { userId } } },
+      where: { id: data.interviewId, application: { job: { organizationId: ctx.organizationId } } },
       select: { id: true, applicationId: true },
     });
     if (!owned) return { error: "Interview not found or unauthorized." };
@@ -144,7 +116,7 @@ export async function submitInterviewFeedbackAction(data: {
       }),
       prisma.activityLog.create({
         data: {
-          userId,
+          userId: ctx.userId,
           applicationId: owned.applicationId,
           action: "Interview Feedback Submitted",
           details: `Result: ${data.result}, Rating: ${data.rating}/5`,

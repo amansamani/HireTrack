@@ -9,6 +9,7 @@ import { updateJobStatusAction, deleteJobAction, getAllJobsAction } from "@/acti
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+// --- STRICT TYPES ---
 type JobStatus = "OPEN" | "CLOSED" | "FILLED";
 type StatusFilter = JobStatus | "ALL";
 
@@ -129,6 +130,9 @@ export default function JobsPoolClient({
   initialJobs: GlobalJob[];
   initialHasMore: boolean;
 }) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
   const [jobs, setJobs] = useState<GlobalJob[]>(initialJobs);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -222,6 +226,43 @@ export default function JobsPoolClient({
     });
   }, [router]);
 
+  const hasActiveFilter = searchQuery.trim() !== "" || statusFilter !== "ALL";
+
+  const SearchFilterBar = (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="relative max-w-sm flex-1">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+        <Input
+          type="text"
+          placeholder="Search by title, department, location..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="h-9 pl-9"
+          aria-label="Search jobs"
+        />
+        {isSearching && (
+          <Loader2 className="absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-muted-foreground" aria-hidden="true" />
+        )}
+      </div>
+      <div className="flex gap-1.5">
+        {(["ALL", "OPEN", "CLOSED", "FILLED"] as StatusFilter[]).map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => setStatusFilter(s)}
+            className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+              statusFilter === s
+                ? "border-primary/40 bg-primary/10 text-primary"
+                : "border-border bg-background text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {s === "ALL" ? "All" : s.charAt(0) + s.slice(1).toLowerCase()}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
   // Handle Empty State
   if (jobs.length === 0) {
     return (
@@ -237,13 +278,22 @@ export default function JobsPoolClient({
             </Button>
           </Link>
         </div>
+
+        {SearchFilterBar}
+
         <div className="rounded-xl border border-dashed border-border bg-card/40 py-12 text-center">
           <Briefcase className="mx-auto mb-3 h-8 w-8 text-muted-foreground" aria-hidden="true" />
-          <p className="text-sm font-medium text-foreground">No positions created yet</p>
-          <p className="mt-1 text-xs text-muted-foreground">Add your first role to start collecting public resumes.</p>
-          <Link href="/dashboard/jobs/create" className="mt-4 inline-block">
-            <Button size="sm" className="text-xs font-semibold">Create your first position</Button>
-          </Link>
+          <p className="text-sm font-medium text-foreground">
+            {hasActiveFilter ? "No jobs match your filters" : "No positions created yet"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {hasActiveFilter ? "Try a different search term or status." : "Add your first role to start collecting public resumes."}
+          </p>
+          {!hasActiveFilter && (
+            <Link href="/dashboard/jobs/create" className="mt-4 inline-block">
+              <Button size="sm" className="text-xs font-semibold">Create your first position</Button>
+            </Link>
+          )}
         </div>
       </div>
     );
@@ -263,37 +313,8 @@ export default function JobsPoolClient({
           </Button>
         </Link>
       </div>
-      
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative max-w-sm flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-          <Input
-            type="text"
-            placeholder="Search by title, department, location..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-9 pl-9"
-            aria-label="Search jobs"
-          />
-          {isSearching && <Loader2 className="absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-muted-foreground" aria-hidden="true" />}
-        </div>
-        <div className="flex gap-1.5">
-          {(["ALL", "OPEN", "CLOSED", "FILLED"] as StatusFilter[]).map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setStatusFilter(s)}
-              className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
-                statusFilter === s
-                  ? "border-primary/40 bg-primary/10 text-primary"
-                  : "border-border bg-background text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {s === "ALL" ? "All" : s.charAt(0) + s.slice(1).toLowerCase()}
-            </button>
-          ))}
-        </div>
-      </div>
+
+      {SearchFilterBar}
 
       <div className="grid grid-cols-1 gap-3.5">
         {jobs.map((job) => (
