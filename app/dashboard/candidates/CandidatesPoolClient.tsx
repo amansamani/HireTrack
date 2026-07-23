@@ -73,7 +73,6 @@ export default function CandidatesPoolClient({
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
   const loadMore = useCallback(async () => {

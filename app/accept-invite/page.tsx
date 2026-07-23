@@ -8,17 +8,17 @@ import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 export default function AcceptInvitePage() {
   const params = useSearchParams();
   const router = useRouter();
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
-  const [message, setMessage] = useState("");
+  const token = params.get("token");
+  const [status, setStatus] = useState<"loading" | "success" | "error">(() =>
+    token ? "loading" : "error"
+  );
+  const [message, setMessage] = useState(() => (token ? "" : "Missing invite token."));
 
   useEffect(() => {
-    const token = params.get("token");
-    if (!token) {
-      setStatus("error");
-      setMessage("Missing invite token.");
-      return;
-    }
+    if (!token) return;
+    let cancelled = false;
     acceptInviteAction(token).then((res) => {
+      if (cancelled) return;
       if (res.error) {
         setStatus("error");
         setMessage(res.error);
@@ -28,7 +28,10 @@ export default function AcceptInvitePage() {
         setTimeout(() => router.push("/dashboard"), 1500);
       }
     });
-  }, [params, router]);
+    return () => {
+      cancelled = true;
+    };
+  }, [token, router]);
 
   return (
     <div className="mx-auto flex min-h-screen max-w-sm flex-col items-center justify-center gap-3 p-4 text-center">
