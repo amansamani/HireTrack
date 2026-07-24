@@ -68,7 +68,8 @@ export async function inviteTeamMemberAction(rawData: unknown) {
       update: { role: parsed.data.role, token, expires: new Date(Date.now() + INVITE_TTL_MS) },
     });
 
-    const acceptUrl = `${process.env.NEXTAUTH_URL}/accept-invite?token=${token}`;
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const acceptUrl = `${baseUrl}/accept-invite?token=${token}`;
     await sendEmail(
       parsed.data.email,
       `You've been invited to join ${org?.name ?? "a team"} on HireKarlo`,

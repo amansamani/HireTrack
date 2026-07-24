@@ -22,7 +22,7 @@ export async function getAllInterviewsAction(page: number = 1) {
         feedback: true,
         application: {
           select: {
-            job: { select: { title: true } },
+            job: { select: { id: true, title: true } },
             candidate: { select: { fullName: true, email: true } },
           },
         },

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { getAllInterviewsAction } from "@/actions/interviews-pool";
 import { submitInterviewFeedbackAction } from "@/actions/interview";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 type GlobalInterview = {
   id: string;
@@ -16,7 +17,7 @@ type GlobalInterview = {
   rating: number | null;
   feedback: string | null;
   application: {
-    job: { title: string };
+    job: { id: string; title: string };
     candidate: { fullName: string; email: string };
   };
 };
@@ -33,6 +34,7 @@ function ScorecardForm({
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [saving, setSaving] = useState(false);
+  const router = useRouter();
 
   // Already has a scorecard — show it read-only, tap to reopen/edit.
   if (interview.result && !open) {
@@ -126,7 +128,16 @@ function ScorecardForm({
             if (res.error) {
               toast.error(res.error);
             } else {
-              toast.success("Feedback saved.");
+              if (result === "PASSED") {
+                toast.success(`${interview.application.candidate.fullName} passed — move them to the next stage?`, {
+                  action: {
+                    label: "Open pipeline",
+                    onClick: () => router.push(`/dashboard/jobs/${interview.application.job.id}`),
+                  },
+                });
+              } else {
+                toast.success("Feedback saved.");
+              }
               onSaved(interview.id, result, rating, feedback);
               setOpen(false);
             }
